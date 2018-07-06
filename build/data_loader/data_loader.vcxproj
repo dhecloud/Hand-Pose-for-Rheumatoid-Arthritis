@@ -1,0 +1,285 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4049A141-C0C8-3904-9E93-7B4ED963EA71}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>data_loader</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\andre\Desktop\fyp\build\data_loader\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">data_loader.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">data_loader</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\andre\Desktop\fyp\build\data_loader\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">data_loader.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">data_loader</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\andre\Desktop\fyp\build\data_loader\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">data_loader.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">data_loader</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\andre\Desktop\fyp\build\data_loader\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">data_loader.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">data_loader</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;DLIB_HAVE_SSE2;DLIB_JPEG_SUPPORT;DLIB_USE_CUDA;DLIB_PNG_SUPPORT;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;DLIB_HAVE_SSE2;DLIB_JPEG_SUPPORT;DLIB_USE_CUDA;DLIB_PNG_SUPPORT;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;DLIB_HAVE_SSE2;DLIB_JPEG_SUPPORT;DLIB_USE_CUDA;DLIB_PNG_SUPPORT;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;DLIB_HAVE_SSE2;DLIB_JPEG_SUPPORT;DLIB_USE_CUDA;DLIB_PNG_SUPPORT;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
+      <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;DLIB_HAVE_SSE2;DLIB_JPEG_SUPPORT;DLIB_USE_CUDA;DLIB_PNG_SUPPORT;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;DLIB_HAVE_SSE2;DLIB_JPEG_SUPPORT;DLIB_USE_CUDA;DLIB_PNG_SUPPORT;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;DLIB_HAVE_SSE2;DLIB_JPEG_SUPPORT;DLIB_USE_CUDA;DLIB_PNG_SUPPORT;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;DLIB_HAVE_SSE2;DLIB_JPEG_SUPPORT;DLIB_USE_CUDA;DLIB_PNG_SUPPORT;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\andre\Desktop\fyp\data_loader;C:\Users\andre\Downloads\dlib-19.13\opencv\build;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\include\opencv;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudev\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\core\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaarithm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\flann\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ml\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\objdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\video\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudabgsegm\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafilters\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaimgproc\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudawarping\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\dnn\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\imgcodecs\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\photo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\shape\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videoio\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudacodec\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\highgui\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\ts\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\features2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\calib3d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudafeatures2d\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudalegacy\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaobjdetect\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudaoptflow\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\cudastereo\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\stitching\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\superres\include;C:\Users\andre\Downloads\dlib-19.13\opencv\sources\modules\videostab\include;D:dlib-19.13\dlib\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/andre/Desktop/fyp/data_loader/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/Users/andre/Desktop/fyp -BC:/Users/andre/Desktop/fyp/build --check-stamp-file C:/Users/andre/Desktop/fyp/build/data_loader/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/andre/Desktop/fyp/data_loader/CMakeLists.txt;C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt;D:\opencv\build\OpenCVConfig-version.cmake;D:\opencv\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindCUDA\select_compute_arch.cmake;D:\opencv\build\OpenCVModules.cmake;C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\andre\Desktop\fyp\build\data_loader\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/andre/Desktop/fyp/data_loader/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/Users/andre/Desktop/fyp -BC:/Users/andre/Desktop/fyp/build --check-stamp-file C:/Users/andre/Desktop/fyp/build/data_loader/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/andre/Desktop/fyp/data_loader/CMakeLists.txt;C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt;D:\opencv\build\OpenCVConfig-version.cmake;D:\opencv\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindCUDA\select_compute_arch.cmake;D:\opencv\build\OpenCVModules.cmake;C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\andre\Desktop\fyp\build\data_loader\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/andre/Desktop/fyp/data_loader/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/Users/andre/Desktop/fyp -BC:/Users/andre/Desktop/fyp/build --check-stamp-file C:/Users/andre/Desktop/fyp/build/data_loader/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/andre/Desktop/fyp/data_loader/CMakeLists.txt;C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt;D:\opencv\build\OpenCVConfig-version.cmake;D:\opencv\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindCUDA\select_compute_arch.cmake;D:\opencv\build\OpenCVModules.cmake;C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\andre\Desktop\fyp\build\data_loader\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/andre/Desktop/fyp/data_loader/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/Users/andre/Desktop/fyp -BC:/Users/andre/Desktop/fyp/build --check-stamp-file C:/Users/andre/Desktop/fyp/build/data_loader/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/andre/Desktop/fyp/data_loader/CMakeLists.txt;C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt;D:\opencv\build\OpenCVConfig-version.cmake;D:\opencv\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.11\Modules\FindCUDA\select_compute_arch.cmake;D:\opencv\build\OpenCVModules.cmake;C:\Users\andre\Desktop\fyp\data_loader\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\andre\Desktop\fyp\build\data_loader\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="C:\Users\andre\Desktop\fyp\data_loader\data_loader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\andre\Desktop\fyp\build\ZERO_CHECK.vcxproj">
+      <Project>{184A5410-49C4-3289-9F2B-9F652A83C537}</Project>
+      <Name>ZERO_CHECK</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\andre\Desktop\fyp\build\dlib_build\dlib.vcxproj">
+      <Project>{05E6E4B2-38D9-3811-B372-77F3BD2DCE3E}</Project>
+      <Name>dlib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

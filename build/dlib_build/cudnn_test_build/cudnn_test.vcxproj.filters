@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:dlib-19.13\dlib\cuda\cudnn_dlibapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:dlib-19.13\dlib\cmake_utils\test_for_cudnn\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Program Files\NVIDIA GPU Computing Toolkit\cuda\v9.2\lib\x64\cudnn.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{A5705A45-FB03-3084-9BF8-0851649D4B28}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
