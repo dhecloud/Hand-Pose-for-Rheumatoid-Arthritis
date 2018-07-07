@@ -27,7 +27,48 @@
 #include <array>
 using namespace std;
 using namespace dlib;
- 
+class PrintNetVistor {
+public:
+
+// template <typename any_net>
+// void operator()(size_t idx, any_net& net){}
+
+template <typename T, typename U, typename E>
+void operator()(size_t i, add_layer<T,U,E>&l)
+{
+	cout << "layer" ;
+	cout << i ;
+	cout << " : ";
+	cout << l.layer_details() << endl;
+}
+
+template <typename tensor>
+void operator()(size_t idx, tensor& t)
+{
+	
+	if (idx == (size_t)0){
+		cout << t.num_samples() << endl;
+		cout << t.k() << endl;
+		cout <<  t.nc() << endl;
+		cout << t.nr() << endl;
+		cout << "" << endl;
+		for (int l = 0; l < t.num_samples(); l++){
+			for (int i = 0; i < t.k(); i++){
+				for (int j = 0; j < t.nr(); j++){
+					for (int k = 0; k < t.nc(); k++)
+					{
+						cout << t.host()[((l*t.k() + i)*t.nr() + j)*t.nc() + k];
+						cout << " " ;
+					}
+					
+				}
+			}
+		}
+	}
+}
+
+};
+
 typedef unsigned char UCHAR;
 
 	template <
@@ -45,10 +86,9 @@ typedef unsigned char UCHAR;
 	int N,
     typename SUBNET 
     > 
-	using skip =
+	using diminc =
 	dlib::relu<
-	dlib::bn_con<
-	dlib::con<N, 1, 1, 1, 1, SUBNET>>>;
+	dlib::con<N, 1, 1, 1, 1, SUBNET>>;
 	
 	
 	template <
@@ -56,10 +96,9 @@ typedef unsigned char UCHAR;
     typename SUBNET
     > 
 	using res =
-	dlib::relu<
 	dlib::con<N,3,3,1,1,
 	dlib::relu<
-	dlib::con<N,3,3,1,1,SUBNET>>>>;
+	dlib::con<N,3,3,1,1,SUBNET>>>;
 	
 	// template <
 	 // int offset, 
@@ -69,8 +108,8 @@ typedef unsigned char UCHAR;
 	// dlib::extract<offset,64,6,6,SUBNET>;
 
 	
-	template <typename SUBNET> using res1    =  add_prev2<skip<32,skip1<tag2<res<32,tag1<SUBNET>>>>>>;
-	template <typename SUBNET> using res2    =  add_prev2<skip<64,skip1<tag2<res<64,tag1<SUBNET>>>>>>;
+	template <typename SUBNET> using res1    =  add_prev1<res<32,tag1<diminc<32,SUBNET>>>>;
+	template <typename SUBNET> using res2    =  add_prev1<res<64,tag1<diminc<64,SUBNET>>>>;
 	// template <typename SUBNET> using regressfull    = regress<3,skip1<regress<2,skip1<regress<1,skip1<regress<0,tag1<SUBNET>;
 
 	
@@ -194,59 +233,10 @@ int main(int argc, char** argv) try
 	std::vector<matrix<float>> training_joints;
 	std::vector<matrix<float>> testing_depth;
 	std::vector<matrix<float>> testing_joints;
-
-	for (int subject = 0; subject < 8; subject ++){
-		for (int frame = 0; frame < 499; frame++){
-			msra.loadDepth(subject,4,frame);
-			matrix<float> depth_mat= msra.getDepthImgSize();
-			depth_mat.set_size(imgsize, imgsize);
-			// depth_mat.set_size(msra.getBBoxWidth(), msra.getBBoxHeight());
-			training_depth.push_back(depth_mat);
-			matrix<float> NormCurjointFrame = copyFloat2ColMat(msra.jointFrame(frame));
-			NormCurjointFrame.set_size(63,1);
-			training_joints.push_back(NormCurjointFrame);
-		}
-		cout<< "subject ";
-		cout<< subject <<endl;
-	}
-
-	std::vector<matrix<float>> training_depth_1;
-	training_depth_1 = cleanMat(training_depth, imgsize);
-	training_depth = training_depth_1;
-	cout<< training_depth.size() <<endl;
-	cout<< training_joints.size() <<endl;
+	// cout<< training_depth.size() <<endl;
+	// cout<< training_joints.size() <<endl;
 
 	
-    // MNIST is broken into two parts, a training set of 60000 images and a test set of
-    // 10000 images.  Each image is labeled so that we know what hand written digit is
-    // depicted.  These next statements load the dataset into memory.
-    // std::vector<matrix<UCHAR>> 		  training_images;
-    // std::vector<unsigned long>         training_labels;
-    // std::vector<matrix<unsigned char>> testing_images;
-    // std::vector<unsigned long>         testing_labels;
-    // load_mnist_dataset(argv[1], training_images, training_labels, testing_images, testing_labels);
-
-
-    // Now let's define the LeNet.  Broadly speaking, there are 3 parts to a network
-    // definition.  The loss layer, a bunch of computational layers, and then an input
-    // layer.  You can see these components in the network definition below.  
-    // 
-    // The input layer here says the network expects to be given matrix<unsigned char>
-    // objects as input.  In general, you can use any dlib image or matrix type here, or
-    // even define your own types by creating custom input layers.
-    //
-    // Then the middle layers define the computation the network will do to transform the
-    // input into whatever we want.  Here we run the image through multiple convolutions,
-    // ReLU units, max pooling operations, and then finally a fully connected layer that
-    // converts the whole thing into just 10 numbers.  
-    // 
-    // Finally, the loss layer defines the relationship between the network outputs, our 10
-    // numbers, and the labels in our dataset.  Since we selected loss_multiclass_log it
-    // means we want to do multiclass classification with our network.   Moreover, the
-    // number of network outputs (i.e. 10) is the number of possible labels.  Whichever
-    // network output is largest is the predicted label.  So for example, if the first
-    // network output is largest then the predicted digit is 0, if the last network output
-    // is largest then the predicted digit is 9.  
     // using net_type = loss_mean_squared_multioutput<
                                 // fc<63,        
                                 // relu<fc<84,   
@@ -262,7 +252,6 @@ int main(int argc, char** argv) try
 	dropout<
 	dlib::fc<2048,
 	dropout<
-	dlib::fc<2048,
 	dlib::relu<
 	dlib::max_pool<2, 2, 2, 2,
 	res2<
@@ -270,6 +259,7 @@ int main(int argc, char** argv) try
 	dlib::max_pool<2, 2, 2, 2,
 	res1<
 	start_net<
+	dlib::bn_con<
 	dlib::input<
 	dlib::matrix<float
 	>>>>>>>>>>>>>>>;
@@ -296,9 +286,27 @@ int main(int argc, char** argv) try
     // So with that out of the way, we can make a network instance.
     net_type net;
 	if (mode == 1){
+		for (int subject = 0; subject < 8; subject ++){
+		for (int frame = 0; frame < 499; frame++){
+			msra.loadDepth(subject,4,frame);
+			matrix<float> depth_mat= msra.getDepthImgSize();
+			depth_mat.set_size(imgsize, imgsize);
+			// depth_mat.set_size(msra.getBBoxWidth(), msra.getBBoxHeight());
+			training_depth.push_back(depth_mat);
+			matrix<float> NormCurjointFrame = copyFloat2ColMat(msra.jointFrame(frame));
+			NormCurjointFrame.set_size(63,1);
+			training_joints.push_back(NormCurjointFrame);
+		}
+		cout<< "subject ";
+		cout<< subject <<endl;
+	}
+
+	std::vector<matrix<float>> training_depth_1;
+	training_depth_1 = cleanMat(training_depth, imgsize);
+	training_depth = training_depth_1;
 		sgd defsolver(0.1,0.9);
 		dnn_trainer<net_type> trainer(net, defsolver);
-		trainer.set_learning_rate(0.0000000001);
+		trainer.set_learning_rate(0.00000001);
 		trainer.set_min_learning_rate(0.00000000000001);
 		trainer.set_mini_batch_size(128);
 		trainer.be_verbose();
@@ -340,6 +348,82 @@ int main(int argc, char** argv) try
 		}
 	
 
+	}
+	
+	else if (mode == 3){
+		
+			using test_net_type = loss_mean_squared_multioutput<
+			dlib::fc<63,
+			dropout<
+			dlib::fc<2048,
+			dlib::extract<9216,64,6,6,
+			dropout<
+			dlib::relu<
+			dlib::max_pool<2, 2, 2, 2,
+			res2<
+			dlib::relu<
+			dlib::max_pool<2, 2, 2, 2,
+			res1<
+			start_net<
+			dlib::bn_con<
+			dlib::input<
+			dlib::matrix<float
+			>>>>>>>>>>>>>>>>;
+			test_net_type test_net;
+		// deserialize("../../results/MSRA_chkpoint.dat") >> net;
+		msra.loadDepth(8,4,499);
+		matrix<float> depth_mat1= msra.getDepthImgSize();
+		depth_mat1.set_size(imgsize, imgsize);
+		testing_depth.push_back(depth_mat1);
+		std::vector<matrix<float>> testing_depth_1;
+		testing_depth_1 = cleanMat(testing_depth, imgsize);
+		testing_depth = testing_depth_1;
+		std::vector<matrix<float>> predicted_labels = test_net(testing_depth);
+		
+		PrintNetVistor printVisitor;
+		cout << " " <<endl;
+		cout << " " <<endl;
+		cout << " " <<endl;
+		cout << " " <<endl;
+		// dlib::visit_layers(test_net,printVisitor);
+			for (int l = 0; l < ((layer<7>(test_net).get_output()).num_samples()); l++){
+				for (int i = 0; i < ((layer<7>(test_net).get_output()).k()); i++){
+					for (int j = 0; j < ((layer<7>(test_net).get_output()).nr()); j++){
+						for (int k = 0; k < ((layer<7>(test_net).get_output()).nc()); k++)
+						{
+							cout << (layer<7>(test_net).get_output()).host()[((l*((layer<7>(test_net).get_output()).k()) + i)*((layer<7>(test_net).get_output()).nr()) + j)*((layer<7>(test_net).get_output()).nc()) + k];
+							cout << " " ;
+						}
+						
+					}
+				}
+			}
+		cout << " " <<endl;
+		cout << " " <<endl;
+		cout << " " <<endl;
+		cout << " " <<endl;
+			for (int l = 0; l < ((layer<4>(test_net).get_output()).num_samples()); l++){
+				for (int i = 0; i < ((layer<4>(test_net).get_output()).k()); i++){
+					for (int j = 0; j < ((layer<4>(test_net).get_output()).nr()); j++){
+						for (int k = 0; k < ((layer<4>(test_net).get_output()).nc()); k++)
+						{
+							cout << (layer<4>(test_net).get_output()).host()[((l*((layer<4>(test_net).get_output()).k()) + i)*((layer<4>(test_net).get_output()).nr()) + j)*((layer<4>(test_net).get_output()).nc()) + k];
+							cout << " " ;
+						}
+						
+					}
+				}
+			}
+		// cout << ((layer<7>(test_net).get_output()).k()) <<endl;
+		// cout << ((layer<7>(test_net).get_output()).nr()) <<endl;
+		// cout << ((layer<7>(test_net).get_output()).nc()) <<endl;
+		// cout << " " <<endl;
+		// cout << ((layer<4>(test_net).get_output()).k()) <<endl;
+		// cout << ((layer<4>(test_net).get_output()).nr()) <<endl;
+		// cout << ((layer<4>(test_net).get_output()).nc()) <<endl;
+		
+		
+		
 	}
     // Now let's run the training images through the network.  This statement runs all the
     // images through it and asks the loss layer to convert the network's raw output into

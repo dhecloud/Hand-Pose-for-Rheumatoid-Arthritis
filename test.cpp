@@ -1,22 +1,3 @@
-// The contents of this file are in the public domain. See LICENSE_FOR_EXAMPLE_PROGRAMS.txt
-/*
-    This is an example illustrating the use of the deep learning tools from the
-    dlib C++ Library.  In it, we will train the venerable LeNet convolutional
-    neural network to recognize hand written digits.  The network will take as
-    input a small image and classify it as one of the 10 numeric digits between
-    0 and 9.
-
-    The specific network we will run is from the paper
-        LeCun, Yann, et al. "Gradient-based learning applied to document recognition."
-        Proceedings of the IEEE 86.11 (1998): 2278-2324.
-    except that we replace the sigmoid non-linearities with rectified linear units. 
-
-    These tools will use CUDA and cuDNN to drastically accelerate network
-    training and testing.  CMake should automatically find them if they are
-    installed and configure things appropriately.  If not, the program will
-    still run but will be much slower to execute.
-*/
-
 #include <typeinfo>
 
 #include <dlib/dnn.h>
@@ -28,56 +9,11 @@
 using namespace std;
 using namespace dlib;
  
-typedef unsigned char UCHAR;
-
-	template <
-    typename SUBNET
-    > 
-	using start_net =
-	dlib::relu<
-	dlib::max_pool<2, 2, 2, 2,
-	dlib::bn_con<
-	dlib::con<16,3,3,1,1,
-	dlib::relu<
-	dlib::con<16,3,3,1,1, SUBNET
-	>>>>>>;
-	
-	template <
-	int N,
-    typename SUBNET 
-    > 
-	using skip =
-	dlib::relu<
-	dlib::bn_con<
-	dlib::con<N, 1, 1, 1, 1, SUBNET>>>;
-	
-	
-	template <
-	 int N, 
-    typename SUBNET
-    > 
-	using res =
-	dlib::relu<
-	dlib::bn_con<
-	dlib::con<N,3,3,1,1,
-	dlib::relu<
-	dlib::con<N,3,3,1,1,SUBNET>>>>>;
-	
-	// template <
-	 // int offset, 
-    // typename SUBNET
-    // > 
-	// using regress =
-	// dlib::extract<offset,64,6,6,SUBNET>;
-
-	
-	template <typename SUBNET> using res1    =  add_prev2<skip<32,skip1<tag2<res<32,tag1<SUBNET>>>>>>;
-	template <typename SUBNET> using res2    =  add_prev2<skip<64,skip1<tag2<res<64,tag1<SUBNET>>>>>>;
-	// template <typename SUBNET> using regressfull    = regress<3,skip1<regress<2,skip1<regress<1,skip1<regress<0,tag1<SUBNET>;
-
 class PrintNetVistor {
 public:
 
+template <typename any_net>
+void operator()(size_t idx, any_net& net){}
 
 template <typename T, typename U, typename E>
 void operator()(size_t i, add_layer<T,U,E>&l)
@@ -88,57 +24,98 @@ void operator()(size_t i, add_layer<T,U,E>&l)
 	cout << l.layer_details() << endl;
 }
 
-template <typename tensor>
-void operator()(size_t idx, tensor& t)
-{
-	// int tmp = 0;
-	// if (tmp = 0){
-		for (int l = 0; l < t.num_samples(); l++){
-			for (int i = 0; i < t.k(); i++){
-				for (int j = 0; j < t.nr(); j++){
-					for (int k = 0; k < t.nc(); k++)
-					{
-						cout << t.host()[((l*t.k() + i)*t.nr() + j)*t.nc() + k];
-						cout << " " ;
-					}
+// template <typename tensor>
+// void operator()(size_t idx, tensor& t)
+// {
+	
+	// if (idx == (size_t)0){
+		// cout << t.num_samples() << endl;
+		// cout << t.k() << endl;
+		// cout <<  t.nc() << endl;
+		// cout << t.nr() << endl;
+		// cout << "" << endl;
+		// for (int l = 0; l < t.num_samples(); l++){
+			// for (int i = 0; i < t.k(); i++){
+				// for (int j = 0; j < t.nr(); j++){
+					// for (int k = 0; k < t.nc(); k++)
+					// {
+						// cout << t.host()[((l*t.k() + i)*t.nr() + j)*t.nc() + k];
+						// cout << " " ;
+					// }
 					
-				}
-			}
-		}
-		// tmp++;
+				// }
+			// }
+		// }
 	// }
-}
+// }
 
 };
-
+ 
 int main(int argc, char** argv) try
 {
+    // This example is going to run on the MNIST dataset.  
+    if (argc != 2)
+    {
+        cout << "This example needs the MNIST dataset to run!" << endl;
+        cout << "You can get MNIST from http://yann.lecun.com/exdb/mnist/" << endl;
+        cout << "Download the 4 files that comprise the dataset, decompress them, and" << endl;
+        cout << "put them in a folder.  Then give that folder as input to this program." << endl;
+        return 1;
+    }
 
-	using net_type = loss_mean_squared_multioutput<
-	dlib::fc<63,
-	dropout<
-	dlib::fc<1024,
-	dropout<
-	dlib::fc<1024,
-	dlib::relu<
-	dlib::max_pool<2, 2, 2, 2,
-	res2<
-	dlib::relu<
-	dlib::max_pool<2, 2, 2, 2,
-	res1<
-	start_net<
-	dlib::input<
-	dlib::matrix<float
-	>>>>>>>>>>>>>>>;
-	
+    std::vector<matrix<unsigned char>> training_images;
+    std::vector<unsigned long>         training_labels;
+    std::vector<matrix<unsigned char>> testing_images;
+    std::vector<unsigned long>         testing_labels;
+    load_mnist_dataset("mnist", training_images, training_labels, testing_images, testing_labels);
+
+    using net_type = loss_multiclass_log<
+								extract<0,2,1,1,
+                                fc<10,        
+                                relu<fc<84,   
+                                relu<fc<120,
+                                max_pool<2,2,2,2,relu<con<16,5,5,1,1,
+                                max_pool<2,2,2,2,relu<con<6,5,5,1,1,
+                                input<matrix<unsigned char>> 
+                                >>>>>>>>>>>>>;
+
+
     net_type net;
-	deserialize("../../results/MSRA_chkpoint.dat") >> net ;
-	PrintNetVistor printVisitor;
-	//dlib::visit_layers(net.subnet(),printVisitor);
-	dlib::visit_layer_parameters(layer<5>(net).subnet(), printVisitor);
-
+	testing_images.resize(1);
+	std::vector<unsigned long> predicted_labels = net(testing_images);
+	cout <<net <<endl;
+	// cout << ((layer<2>(net).get_output()).k()) <<endl;
+	// cout << ((layer<2>(net).get_output()).nr()) <<endl;
+	// cout << ((layer<2>(net).get_output()).nc()) <<endl;
+	for (int l = 0; l < ((layer<2>(net).get_output()).num_samples()); l++){
+		for (int i = 0; i < ((layer<2>(net).get_output()).k()); i++){
+			for (int j = 0; j < ((layer<2>(net).get_output()).nr()); j++){
+				for (int k = 0; k < ((layer<2>(net).get_output()).nc()); k++)
+						{
+							cout << (layer<2>(net).get_output()).host()[((l*((layer<2>(net).get_output()).k()) + i)*((layer<2>(net).get_output()).nr()) + j)*((layer<2>(net).get_output()).nc()) + k];
+							cout << " " ;
+						}
+						cout << "" <<endl ;
+					}
+					cout << "" <<endl ;
+				}
+			}
+	cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" <<endl ;
+	for (int l = 0; l < ((layer<1>(net).get_output()).num_samples()); l++){
+		for (int i = 0; i < ((layer<1>(net).get_output()).k()); i++){
+			for (int j = 0; j < ((layer<1>(net).get_output()).nr()); j++){
+				for (int k = 0; k < ((layer<1>(net).get_output()).nc()); k++)
+						{
+							cout << (layer<1>(net).get_output()).host()[((l*((layer<1>(net).get_output()).k()) + i)*((layer<1>(net).get_output()).nr()) + j)*((layer<1>(net).get_output()).nc()) + k];
+							cout << " " ;
+						}
+						cout << "" <<endl ;
+					}
+					cout << "" <<endl ;
+				}
+			}
+    
 }
-
 catch(std::exception& e)
 {
     cout << e.what() << endl;
