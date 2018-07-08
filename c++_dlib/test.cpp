@@ -70,43 +70,42 @@ int main(int argc, char** argv) try
     load_mnist_dataset("mnist", training_images, training_labels, testing_images, testing_labels);
 
     using net_type = loss_multiclass_log<
-								extract<0,2,1,1,
-                                fc<10,        
-                                relu<fc<84,   
-                                relu<fc<120,
-                                max_pool<2,2,2,2,relu<con<16,5,5,1,1,
+								fc<10,
+								extract<0,16,2,2,
+								extract<128,16,4,2,
+                                max_pool<3,3,3,3,relu<con<16,5,5,1,1,
                                 max_pool<2,2,2,2,relu<con<6,5,5,1,1,
                                 input<matrix<unsigned char>> 
-                                >>>>>>>>>>>>>;
+                                >>>>>>>>>>;
 
 
     net_type net;
 	testing_images.resize(1);
 	std::vector<unsigned long> predicted_labels = net(testing_images);
 	cout <<net <<endl;
-	// cout << ((layer<2>(net).get_output()).k()) <<endl;
-	// cout << ((layer<2>(net).get_output()).nr()) <<endl;
-	// cout << ((layer<2>(net).get_output()).nc()) <<endl;
+	// cout << ((layer<3>(net).get_output()).k()) <<endl;
+	// cout << ((layer<3>(net).get_output()).nr()) <<endl;
+	// cout << ((layer<3>(net).get_output()).nc()) <<endl;
+	// for (int l = 0; l < ((layer<3>(net).get_output()).num_samples()); l++){
+		// for (int i = 0; i < ((layer<3>(net).get_output()).k()); i++){
+			// for (int j = 0; j < ((layer<3>(net).get_output()).nr()); j++){
+				// for (int k = 0; k < ((layer<3>(net).get_output()).nc()); k++)
+						// {
+							// cout << (layer<3>(net).get_output()).host()[((l*((layer<3>(net).get_output()).k()) + i)*((layer<3>(net).get_output()).nr()) + j)*((layer<3>(net).get_output()).nc()) + k];
+							// cout << " " ;
+						// }
+						// cout << "" <<endl ;
+					// }
+					// cout << "" <<endl ;
+				// }
+			// }
+	cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" <<endl ;
 	for (int l = 0; l < ((layer<2>(net).get_output()).num_samples()); l++){
 		for (int i = 0; i < ((layer<2>(net).get_output()).k()); i++){
 			for (int j = 0; j < ((layer<2>(net).get_output()).nr()); j++){
 				for (int k = 0; k < ((layer<2>(net).get_output()).nc()); k++)
 						{
 							cout << (layer<2>(net).get_output()).host()[((l*((layer<2>(net).get_output()).k()) + i)*((layer<2>(net).get_output()).nr()) + j)*((layer<2>(net).get_output()).nc()) + k];
-							cout << " " ;
-						}
-						cout << "" <<endl ;
-					}
-					cout << "" <<endl ;
-				}
-			}
-	cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" <<endl ;
-	for (int l = 0; l < ((layer<1>(net).get_output()).num_samples()); l++){
-		for (int i = 0; i < ((layer<1>(net).get_output()).k()); i++){
-			for (int j = 0; j < ((layer<1>(net).get_output()).nr()); j++){
-				for (int k = 0; k < ((layer<1>(net).get_output()).nc()); k++)
-						{
-							cout << (layer<1>(net).get_output()).host()[((l*((layer<1>(net).get_output()).k()) + i)*((layer<1>(net).get_output()).nr()) + j)*((layer<1>(net).get_output()).nc()) + k];
 							cout << " " ;
 						}
 						cout << "" <<endl ;

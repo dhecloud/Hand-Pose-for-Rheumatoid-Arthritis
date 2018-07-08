@@ -100,18 +100,156 @@ typedef unsigned char UCHAR;
 	dlib::relu<
 	dlib::con<N,3,3,1,1,SUBNET>>>;
 	
-	// template <
-	 // int offset, 
-    // typename SUBNET
-    // > 
-	// using regress =
-	// dlib::extract<offset,64,6,6,SUBNET>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice1 =						//1st quarter
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<0,64,6,6,
+	extract<0,64,12,6, SUBNET			
+	>>>>>>>>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice2 =						//2nd quarter
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<2304,64,6,6,
+	extract<0,64,12,6, SUBNET			
+	>>>>>>>>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice3 =						//3rd quarter
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<0,64,6,6,
+	extract<4608,64,12,6, SUBNET			
+	>>>>>>>>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice4 =						//4th quarter
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<2304,64,6,6,
+	extract<4608,64,12,6, SUBNET			
+	>>>>>>>>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice5 =						//3_1 from pool 3
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<0,64,6,6,
+	extract<2304,64,6,12, SUBNET			
+	>>>>>>>>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice6 =						//3_2
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<2304,64,6,6,
+	extract<2304,64,6,12, SUBNET			
+	>>>>>>>>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice7 =						//feat_c1
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<1152,64,6,6,				// crop_feat_c1_v to get feat_c1
+	extract<2304,64,6,12, SUBNET		//feat_c1_1	
+	>>>>>>>>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice8 =						//4_1
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<0,64,6,6,				// crop_feat_h to get feat_4_1
+	extract<2304,64,12,6, SUBNET		//feat_c1_1_h
+	>>>>>>>>;
+	
+	template <
+    typename SUBNET
+    > 
+	using slice9 =						//4_2
+	dropout<
+	relu<
+	fc<2048,
+	dropout<
+	relu<
+	fc<2048,
+	extract<2304,64,6,6,				// crop_feat_h to get feat_4_2
+	extract<2304,64,12,6, SUBNET		//feat_c1_1_h
+	>>>>>>>>;
+	
+	// template <typename SUBNET> using REN=	
+		// concat<tag1,tag2,tag3,tag4,tag5,tag6,tag7,tag8,tag9<
+		// tag9<slice9<skip1<
+		// tag8<slice8<skip1<
+		// tag7<slice7<skip1<
+		// tag6<slice6<skip1<
+		// tag5<slice5<skip1<
+		// tag4<slice4<skip1<
+		// tag3<slice3<skip1<
+		// tag2<slice2<skip1<
+		// tag1<slice1<
+		// tag0<SUBNET
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>;
+		
+		template <typename SUBNET> using REN =
+		dlib::concat<tag1,
+		tag0>,<SUBNET
+		>;
 
+	
 	
 	template <typename SUBNET> using res1    =  add_prev1<res<32,tag1<diminc<32,SUBNET>>>>;
 	template <typename SUBNET> using res2    =  add_prev1<res<64,tag1<diminc<64,SUBNET>>>>;
-	// template <typename SUBNET> using regressfull    = regress<3,skip1<regress<2,skip1<regress<1,skip1<regress<0,tag1<SUBNET>;
-
 	
 float maxpoint(float* array, int size=NULL){
 	float tmpmax = 0.0;
