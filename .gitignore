@@ -381,3 +381,14 @@ model.txt
 MSRA_chkpoint.dat
 MSRA_chkpoint
 MSRA_chkpoint_
+*~
+demo-cpp
+*.pyc
+*.png
+*.txt
+*.gif
+*.caffemodel
+.spyproject*
+.idea
+training
+caffe-pose
