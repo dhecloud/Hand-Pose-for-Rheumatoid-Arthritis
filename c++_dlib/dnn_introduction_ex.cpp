@@ -91,6 +91,7 @@ typedef unsigned char UCHAR;
 	dlib::con<N, 1, 1, 1, 1, SUBNET>>;
 	
 	
+	
 	template <
 	 int N, 
     typename SUBNET
@@ -100,6 +101,8 @@ typedef unsigned char UCHAR;
 	dlib::relu<
 	dlib::con<N,3,3,1,1,SUBNET>>>;
 	
+	template <typename SUBNET> using res1    =  add_prev1<res<32,tag1<diminc<32,SUBNET>>>>;
+	template <typename SUBNET> using res2    =  add_prev1<res<64,tag1<diminc<64,SUBNET>>>>;
 	
 	template <
     typename SUBNET
@@ -247,10 +250,7 @@ typedef unsigned char UCHAR;
 		>;
 
 	
-	
-	template <typename SUBNET> using res1    =  add_prev1<res<32,tag1<diminc<32,SUBNET>>>>;
-	template <typename SUBNET> using res2    =  add_prev1<res<64,tag1<diminc<64,SUBNET>>>>;
-	
+
 float maxpoint(float* array, int size=NULL){
 	float tmpmax = 0.0;
 	if (size == NULL){
