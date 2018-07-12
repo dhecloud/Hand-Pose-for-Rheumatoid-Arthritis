@@ -1,17 +1,20 @@
 from torch.utils.data import Dataset
 import torch
 import numpy as np
-from scipy import stats
 import cv2
 
 class MSRADataset(Dataset):
     def __init__(self, training=True):
         if training:
-            self.images = read_MSRA()
+            self.images = (read_MSRA())
+            print("Shape of training images: " + str(self.images.shape))
             self.joints = read_joints()
+            print("Shape of training joints: " + str(self.joints.shape))
         else:
-            self.images = read_MSRA([8])
+            self.images = (read_MSRA([8]))
+            print("Shape of testing images: " + str(self.images.shape))
             self.joints = read_joints([8])
+            print("Shape of testing joints: " + str(self.joints.shape))
 
     def __len__(self):
         return len(self.images)
@@ -94,8 +97,10 @@ def read_MSRA(persons=[0,1,2,3,4,5,6,7]): #list of persons
             #get cube and resize to 96x96
             depth = _crop_image(depth, center, is_debug=False)
             #normalize
-            depth = stats.zscore(depth)
-
+            depth = normalize(depth)
+            assert not np.any(np.isnan(depth))
+            assert ((depth>1).sum() == 0)
+            assert ((depth<-1).sum() == 0)
             depth = (torch.from_numpy(depth))
             depth = torch.unsqueeze(depth, 0)
             if (not init):
@@ -125,3 +130,10 @@ def read_joints(persons=[0,1,2,3,4,5,6,7]):
 
 
     return joints
+
+def normalize(array):
+    min = np.min(array)
+    max = np.max(array)
+    array = (2 * ((array - min)/(max - min))) -1
+
+    return array

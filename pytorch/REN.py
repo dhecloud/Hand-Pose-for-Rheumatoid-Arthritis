@@ -6,7 +6,7 @@ class RegionEnsemble(nn.Module):
 
     def __init__(self):
         super(RegionEnsemble, self).__init__()
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.fc1 = nn.Linear(64*6*6, 2048)
         self.fc2 = nn.Linear(2048, 2048)
         self.dropout = nn.Dropout()
@@ -26,6 +26,8 @@ class RegionEnsemble(nn.Module):
         quarter1 = self.relu(quarter1)
         quarter1 = self.dropout(quarter1)
         quarter1 = self.fc2(quarter1)
+        quarter1 = self.relu(quarter1)
+        quarter1 = self.dropout(quarter1)
 
         quarter2 = quarter2.contiguous()
         quarter2 = quarter2.view(quarter2.size(0),-1)
@@ -33,6 +35,8 @@ class RegionEnsemble(nn.Module):
         quarter2 = self.relu(quarter2)
         quarter2 = self.dropout(quarter2)
         quarter2 = self.fc2(quarter2)
+        quarter2 = self.relu(quarter2)
+        quarter2 = self.dropout(quarter2)
 
         quarter3 = quarter3.contiguous()
         quarter3 = quarter3.view(quarter3.size(0),-1)
@@ -40,6 +44,8 @@ class RegionEnsemble(nn.Module):
         quarter3 = self.relu(quarter3)
         quarter3 = self.dropout(quarter3)
         quarter3 = self.fc2(quarter3)
+        quarter3 = self.relu(quarter3)
+        quarter3 = self.dropout(quarter3)
 
         quarter4 = quarter4.contiguous()
         quarter4 = quarter4.view(quarter4.size(0),-1)
@@ -47,6 +53,8 @@ class RegionEnsemble(nn.Module):
         quarter4 = self.relu(quarter4)
         quarter4 = self.dropout(quarter4)
         quarter4 = self.fc2(quarter4)
+        quarter4 = self.relu(quarter4)
+        quarter4 = self.dropout(quarter4)
 
 
         out = torch.cat((quarter1,quarter2,quarter3,quarter4),1)
@@ -58,7 +66,7 @@ class Residual(nn.Module):
     def __init__(self, planes):
         super(Residual, self).__init__()
         self.conv1 = nn.Conv2d(in_channels= planes, out_channels=planes, kernel_size = 3,  padding=1)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
 
     def forward(self, x):
@@ -68,7 +76,6 @@ class Residual(nn.Module):
         out = self.relu(out)
 
         out = self.conv1(out)
-        out = self.relu(out)
 
         out += residual
         return out
@@ -79,7 +86,7 @@ class REN(nn.Module):
         super(REN, self).__init__()
         #nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
         self.conv0 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size = 3, padding=1)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.conv1 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size = 3, padding=1)
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.conv2_dim_inc = nn.Conv2d(in_channels=16, out_channels=32, kernel_size = 1, padding=0)
@@ -125,20 +132,3 @@ class REN(nn.Module):
 
         out = self.fc1(out)
         return out
-
-# model = REN()
-# model = model.double()
-# print(model)
-# depth = np.zeros((96, 96), dtype=np.float64)
-# depth1 = np.ones((96, 96), dtype=np.float64)
-# depthtrain = (torch.from_numpy(depth))
-# depthtrain1 = (torch.from_numpy(depth1))
-# depthtrain = torch.unsqueeze(depthtrain,0)
-# depthtrain1 = torch.unsqueeze(depthtrain1,0)
-# print(depthtrain.shape)
-# depthtrain = torch.cat((depthtrain,depthtrain1),0)
-# print(depthtrain.shape)
-# depthtrain = torch.unsqueeze(depthtrain, 1)
-#
-# print(depthtrain.shape)
-# output = model(depthtrain)
