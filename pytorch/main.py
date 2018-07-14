@@ -9,7 +9,7 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import numpy as np
 import time
-
+import cv2
 
 OUTFILE = "results"
 def adjust_learning_rate(optimizer, epoch):
@@ -59,6 +59,7 @@ def main(resume=False):
     train_loss = []
     val_loss = []
     val_acc = []
+    mean_errors = []
     for epoch in range(0,150):
         adjust_learning_rate(optimizer, epoch)
 
@@ -66,8 +67,15 @@ def main(resume=False):
         loss_train = train(train_loader, model, criterion, optimizer, epoch)
         train_loss = train_loss + loss_train
         # evaluate on validation set
-        loss_val = validate(val_loader, model, criterion)
+        loss_val, mean_error = validate(val_loader, model, criterion)
         val_loss = val_loss + loss_val
+        mean_errors += mean_error
+        print(mean_errors)
+        print(type(mean_error[0] ))
+        print(type(mean_errors[len(mean_errors)-1]))
+        if mean_error[0] < mean_errors[len(mean_errors)-1]:
+            print("saving best performing checkpoint on val")
+            save_checkpoint(state, True)
 
         save_checkpoint({
             'epoch': epoch + 1,
@@ -79,6 +87,8 @@ def main(resume=False):
     np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_train_loss.out",train_loss)
     np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "val_loss.out",val_loss)
     np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "val_acc.out",val_acc)
+    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "mean_errors.out",mean_errors)
+
 
 
 
@@ -102,7 +112,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
-        loss_train.append(loss.data[0])
+        loss_train.append(loss.data.item())
         optimizer.step()
 
         # measure elapsed time
@@ -121,7 +131,7 @@ def validate(val_loader, model, criterion):
     model.eval()
 
     loss_val = []
-
+    errors = []
     with torch.no_grad():
 
         for i, (input, target) in enumerate(val_loader):
@@ -132,16 +142,17 @@ def validate(val_loader, model, criterion):
             input = input.double()
             input = input.cuda()
             output = model(input)
+            errors.append(compute_distance_error(output, target).item())
             loss = criterion(output, target)
 
             if i % 5 == 0:
                 print('Test: [{0}/{1}]\t'
                       'Loss {loss:.4f}\t'.format(
                        i, len(val_loader), loss=loss))
-            loss_val.append(loss.data[0])
+            loss_val.append(loss.data.item())
 
 
-    return [np.mean(loss_val)]
+    return [np.mean(loss_val)] , [np.mean(errors)]
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
@@ -155,77 +166,64 @@ def load_checkpoint(path,model, optimizer):
 
     return model, optimizer
 
+def compute_distance_error(output, target):
+
+    error = (torch.mean((target-output).abs()))
+    return error
+
+def draw_pose(img, pose):
+    for pt in pose:
+        print(pt)
+        cv2.circle(img, (int(pt[0]), int(pt[1])), 3, (0, 0, 255), -1)
+    for x, y in [(0, 1), (1, 2), (2, 3), (3, 4), (0, 5), (5, 6), (6, 7), (7, 8),
+                (0, 9), (9, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15), (15, 16),
+                (0, 17), (17, 18), (18, 19), (19, 20)]:
+        cv2.line(img, (int(pose[x, 0]), int(pose[x, 1])),
+                 (int(pose[y, 0]), int(pose[y, 1])), (0, 0, 255), 1)
+    return img
+
+def _transform_pose(poses, centers):
+    _fx, _fy, _ux, _uy = 241.42, 241.42, 160, 120
+    res_poses = poses.detach().numpy() * 150
+    num_joint = 21
+    centers_tile = np.tile(centers.astype(int), (num_joint, 1, 1)).transpose([1, 0, 2])
+    res_poses[:, 0::3] = res_poses[:, 0::3] * _fx / centers_tile[:, :, 2] + centers_tile[:, :, 0]
+    res_poses[:, 1::3] = res_poses[:, 1::3] * _fy / centers_tile[:, :, 2] + centers_tile[:, :, 1]
+    res_poses[:, 2::3] += centers_tile[:, :, 2]
+    res_poses = np.reshape(res_poses, [poses.shape[0], -1, 3])
+    return res_poses
 
 if __name__ == '__main__':
     main()
     # torch.no_grad()
-    # # torch.set_printoptions(threshold=100000)
-    # np.set_printoptions(threshold=np.nan)
     # depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
-    # #get centers
     # center = get_center(depth)
-    # #get cube and resize to 96x96
     # depth = _crop_image(depth, center, is_debug=False)
-    # # print(depth)
-    # assert ((depth>1).sum() == 0)
-    # assert ((depth<-1).sum() == 0)
-    # #normalize
-    # # depth1 = normalize(depth)
-    # # print(np.array_equal(depth,depth1))
     # depth = (torch.from_numpy(depth))
     # depth = torch.unsqueeze(depth, 0)
     # depth = torch.unsqueeze(depth, 0)
-    # # print(depth.shape)
-    #
-    # depth1 = read_depth_from_bin("data/P2/5/000400_depth.bin")
-    # #get centers
-    # center = get_center(depth1)
-    # #get cube and resize to 96x96
-    # depth1 = _crop_image(depth1, center, is_debug=False)
-    # # print(depth)
-    # assert ((depth1>1).sum() == 0)
-    # assert ((depth1<-1).sum() == 0)
-    # # normalize
-    # # depth1 = normalize(depth)
-    # print(np.array_equal(depth,depth1))
-    # depth1 = (torch.from_numpy(depth1))
-    # depth1 = torch.unsqueeze(depth1, 0)
-    # depth1= torch.unsqueeze(depth1, 0)
-    #
-    # print(torch.eq(depth1,depth).all())
+    # print(center.astype(int))
+    # print(depth.shape)
     # model = REN()
     # criterion = nn.SmoothL1Loss().cuda()
     # optimizer = torch.optim.SGD(model.parameters(), 0.005,
     #                             momentum=0.9,
     #                             weight_decay=0.0005)
     #
-    # model, optimizer = load_checkpoint("checkpoint.pth.tar", model, optimizer)
+    # model, optimizer = load_checkpoint("2_checkpoint.pth.tar", model, optimizer)
     # model.eval()
-    # model = model.train(False)
     # model =model.cuda()
     # model =model.double()
     # depth = depth.cuda()
     # depth = depth.double()
-    # depth1 = depth1.cuda()
-    # depth1 = depth1.double()
-    #
-    # test = np.ones((96,96))
-    # test = (torch.from_numpy(test))
-    # test = torch.unsqueeze(test, 0)
-    # test= torch.unsqueeze(test, 0)
-    # test = test.cuda()
-    # test = test.double()
-    #
-    #
-    # # print(depth)
     # results = model(depth)
-    # results1 = model(depth1)
-    # results2 = model(test)
     # joints = read_joints()
-    # print(joints[0])
-    # print(results)
-    # # print(results1)
-    # # print(results2)
-    # # print(torch.eq(results,results1).all())
-    # # print(torch.eq(results2,results1).all())
-    # # print(list(model.parameters()))
+    #
+    # pose = _transform_pose(results.cpu(),center)[0]
+    # print(pose[0][0])
+    # print(type(depth))
+    # img = draw_pose(depth.cpu().numpy(), pose)
+    # cv2.imshow('result', img)
+    # ch = cv2.waitKey(0)
+    # if ch == ord('q'):
+    #     exit(0)
