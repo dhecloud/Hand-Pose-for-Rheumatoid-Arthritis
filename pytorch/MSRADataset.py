@@ -2,24 +2,33 @@ from torch.utils.data import Dataset
 import torch
 import numpy as np
 import cv2
+from torchvision import transforms
 
 class MSRADataset(Dataset):
     def __init__(self, training=True):
+        # transforms.RandomAffine(degrees = 0,translate=(-10,10))
+        # self.transforms = transforms.Compose([
+        #      transforms.RandomRotation(90),
+        #      transforms.RandomHorizontalFlip()
+        #   ])
+
         if training:
             self.images = (read_MSRA())
             print("Shape of training images: " + str(self.images.shape))
             self.joints = read_joints()
             print("Shape of training joints: " + str(self.joints.shape))
         else:
-            self.images = (read_MSRA([8]))
+            self.images = (read_MSRA([7]))
             print("Shape of testing images: " + str(self.images.shape))
-            self.joints = read_joints([8])
+            self.joints = read_joints([7])
             print("Shape of testing joints: " + str(self.joints.shape))
 
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, index):
+        # if self.transforms is not None:
+        #     self.images = self.transforms(self.images)
         return self.images[index], self.joints[index]
 
 def get_center(img, upper=1000, lower=10):
@@ -63,10 +72,9 @@ def _crop_image(img, center, is_debug=False):
         img_show = (res_img + 1) / 2;
         hehe = cv2.resize(img_show, (512, 512))
         cv2.imshow('debug', img_show)
-        ch = cv2.waitKey(33)
+        ch = cv2.waitKey(0)
         if ch == ord('q'):
             exit(0)
-
     return res_img
 
 def read_depth_from_bin(image_name):
@@ -79,7 +87,7 @@ def read_depth_from_bin(image_name):
     depth[top:bottom, left:right] = np.reshape(data, (bottom-top, right-left))
     return depth
 
-def read_MSRA(persons=[0,1,2,3,4,5,6,7]): #list of persons
+def read_MSRA(persons=[0,1,2,3,4,5,6]): #list of persons
     names = ['{:d}'.format(i).zfill(6) for i in range(500)]
     init = False
     init2 = False
@@ -97,7 +105,7 @@ def read_MSRA(persons=[0,1,2,3,4,5,6,7]): #list of persons
             #get cube and resize to 96x96
             depth = _crop_image(depth, center, is_debug=False)
             #normalize
-            depth = normalize(depth)
+            #depth = normalize(depth)
             assert not np.any(np.isnan(depth))
             assert ((depth>1).sum() == 0)
             assert ((depth<-1).sum() == 0)
@@ -118,7 +126,7 @@ def read_MSRA(persons=[0,1,2,3,4,5,6,7]): #list of persons
 
     return depth_images
 
-def read_joints(persons=[0,1,2,3,4,5,6,7]):
+def read_joints(persons=[0,1,2,3,4,5,6]):
     joints = []
     for person in persons:
         with open("data/P"+str(person)+"/5/joint.txt") as f:
@@ -137,3 +145,15 @@ def normalize(array):
     array = (2 * ((array - min)/(max - min))) -1
 
     return array
+
+# np.set_printoptions(threshold=np.nan)
+# depth = read_depth_from_bin("data/P8/5/000400_depth.bin")
+#
+# #get centers
+# center = get_center(depth)
+#
+# #get cube and resize to 96x96
+# depth = _crop_image(depth, center, is_debug=True)
+# #normalize
+# depth = normalize(depth)
+# print(depth)
