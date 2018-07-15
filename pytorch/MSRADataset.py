@@ -1,9 +1,11 @@
+from multiprocessing import Process
 from torch.utils.data import Dataset
 import torch
 import numpy as np
 import cv2
 from torchvision import transforms
-
+import pickle
+import sys
 class MSRADataset(Dataset):
     def __init__(self, training=True):
         # transforms.RandomAffine(degrees = 0,translate=(-10,10))
@@ -13,14 +15,14 @@ class MSRADataset(Dataset):
         #   ])
 
         if training:
-            self.images = (read_MSRA())
+            self.images = read_MSRA([0],augment =True)
             print("Shape of training images: " + str(self.images.shape))
-            self.joints = read_joints()
+            self.joints = read_joints([0],augment =True)
             print("Shape of training joints: " + str(self.joints.shape))
         else:
-            self.images = (read_MSRA([7]))
+            self.images = (read_MSRA([7], augment =False))
             print("Shape of testing images: " + str(self.images.shape))
-            self.joints = read_joints([7])
+            self.joints = read_joints([7], augment =False)
             print("Shape of testing joints: " + str(self.joints.shape))
 
     def __len__(self):
@@ -87,13 +89,14 @@ def read_depth_from_bin(image_name):
     depth[top:bottom, left:right] = np.reshape(data, (bottom-top, right-left))
     return depth
 
-def read_MSRA(persons=[0,1,2,3,4,5,6]): #list of persons
+def read_MSRA(persons=[0,1,2,3,4,5,6], augment =False, pickle=False): #list of persons
     names = ['{:d}'.format(i).zfill(6) for i in range(500)]
     init = False
     init2 = False
     centers = []
     for person in persons:
         for name in names:
+            print(name)
             if ((person == 3) and (name == "000499")): #missing bin
                 continue
             depth = read_depth_from_bin("data/P"+str(person)+"/5/"+name+"_depth.bin")
@@ -109,8 +112,10 @@ def read_MSRA(persons=[0,1,2,3,4,5,6]): #list of persons
             assert not np.any(np.isnan(depth))
             assert ((depth>1).sum() == 0)
             assert ((depth<-1).sum() == 0)
-            depth = (torch.from_numpy(depth))
-            depth = torch.unsqueeze(depth, 0)
+            # augment_translate = augment_translation(depth)
+            # augment_rotate = augment_rotation(depth)
+            # augmented = augment_translate + augment_rotate
+            depth = (torch.from_numpy(np.asarray(depth)))
             if (not init):
                 tmp = depth
                 init = True
@@ -123,16 +128,22 @@ def read_MSRA(persons=[0,1,2,3,4,5,6]): #list of persons
             depth_images= torch.cat((depth_images,tmp),0)
         init =False
     depth_images = torch.unsqueeze(depth_images, 1)
-
+    if pickle:
+        pickle.dump(depth_images, open(str(persons[0])+'.p', 'wb'))
     return depth_images
 
-def read_joints(persons=[0,1,2,3,4,5,6]):
+def read_joints(persons=[0,1,2,3,4,5,6], augment=False):
     joints = []
     for person in persons:
         with open("data/P"+str(person)+"/5/joint.txt") as f:
             num_joints = int(f.readline())
             for i in range(num_joints):
-                joints.append(np.fromstring(f.readline(),sep=' '))
+                if augment:
+                    tmp = np.fromstring(f.readline(),sep=' ')
+                    for i in range(802):
+                        joints.append(tmp)
+                else:
+                    joints.append(np.fromstring(f.readline(),sep=' '))
 
     joints = torch.from_numpy(np.asarray(joints))
 
@@ -146,14 +157,32 @@ def normalize(array):
 
     return array
 
-# np.set_printoptions(threshold=np.nan)
-# depth = read_depth_from_bin("data/P8/5/000400_depth.bin")
-#
-# #get centers
-# center = get_center(depth)
-#
-# #get cube and resize to 96x96
-# depth = _crop_image(depth, center, is_debug=True)
-# #normalize
-# depth = normalize(depth)
-# print(depth)
+def augment_translation(depth):
+    augment_translation = []
+    rows,cols = depth.shape
+    for i in range(-10, 11):
+        for j in range(-10, 11):
+            M = np.float32([[1,0,i],[0,1,j]])
+            augment_translation.append(cv2.warpAffine(depth,M,(cols,rows)))
+
+    return augment_translation
+
+def augment_scaling(depth):
+    augment_scale = []
+    for i in [0.9, 1.0 ,1.1]:
+        for j in [0.9, 1.0 ,1.1]:
+            resize = cv2.resize(depth, (96,96), fx=i, fy=j)
+            augment_scale.append(resize)
+
+    return augment_scale
+
+def augment_rotation(depth):
+    augment_rotate = []
+    rows,cols = depth.shape
+    for i in range(-180,181):
+        M = cv2.getRotationMatrix2D(((cols-1)/2.0,(rows-1)/2.0),i,1)
+        augment_rotate.append(cv2.warpAffine(depth,M,(cols,rows)))
+    return augment_rotate
+
+
+read_MSRA(persons=[sys.argv[1]], pickle=True)
