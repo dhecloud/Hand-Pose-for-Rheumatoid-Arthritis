@@ -1,4 +1,4 @@
-from multiprocessing import Process
+import h5py
 from torch.utils.data import Dataset
 import torch
 import numpy as np
@@ -6,6 +6,8 @@ import cv2
 from torchvision import transforms
 import pickle
 import sys
+import os
+
 class MSRADataset(Dataset):
     def __init__(self, training=True):
         # transforms.RandomAffine(degrees = 0,translate=(-10,10))
@@ -13,11 +15,11 @@ class MSRADataset(Dataset):
         #      transforms.RandomRotation(90),
         #      transforms.RandomHorizontalFlip()
         #   ])
-
+        self.training = training
         if training:
-            self.images = read_MSRA([0],augment =True)
+            self.images = read_MSRA(augment =False)
             print("Shape of training images: " + str(self.images.shape))
-            self.joints = read_joints([0],augment =True)
+            self.joints = read_joints(augment=False)
             print("Shape of training joints: " + str(self.joints.shape))
         else:
             self.images = (read_MSRA([7], augment =False))
@@ -26,11 +28,13 @@ class MSRADataset(Dataset):
             print("Shape of testing joints: " + str(self.joints.shape))
 
     def __len__(self):
-        return len(self.images)
+        if self.training:
+            length = 1543059
+        else:
+            length = 220500
+        return length
 
     def __getitem__(self, index):
-        # if self.transforms is not None:
-        #     self.images = self.transforms(self.images)
         return self.images[index], self.joints[index]
 
 def get_center(img, upper=1000, lower=10):
@@ -58,7 +62,6 @@ def _crop_image(img, center, is_debug=False):
     xend = center[0] + _cube_size / center[2] * _fx
     ystart = center[1] - _cube_size / center[2] * _fy
     yend = center[1] + _cube_size / center[2] * _fy
-
     src = [(xstart, ystart), (xstart, yend), (xend, ystart)]
     dst = [(0, 0), (0, _input_size - 1), (_input_size - 1, 0)]
     trans = cv2.getAffineTransform(np.array(src, dtype=np.float32),
@@ -96,7 +99,7 @@ def read_MSRA(persons=[0,1,2,3,4,5,6], augment =False, pickle=False): #list of p
     centers = []
     for person in persons:
         for name in names:
-            print(name)
+            # print(name)
             if ((person == 3) and (name == "000499")): #missing bin
                 continue
             depth = read_depth_from_bin("data/P"+str(person)+"/5/"+name+"_depth.bin")
@@ -116,6 +119,9 @@ def read_MSRA(persons=[0,1,2,3,4,5,6], augment =False, pickle=False): #list of p
             # augment_rotate = augment_rotation(depth)
             # augmented = augment_translate + augment_rotate
             depth = (torch.from_numpy(np.asarray(depth)))
+            # print(depth.shape)
+            depth = torch.unsqueeze(depth, 0)
+            # print(depth.shape)
             if (not init):
                 tmp = depth
                 init = True
@@ -132,30 +138,77 @@ def read_MSRA(persons=[0,1,2,3,4,5,6], augment =False, pickle=False): #list of p
         pickle.dump(depth_images, open(str(persons[0])+'.p', 'wb'))
     return depth_images
 
+def read_MSRA_test(persons=[0,1,2,3,4,5,6], augment =False, pickleit=False): #list of persons
+    names = ['{:d}'.format(i).zfill(6) for i in range(500)]
+    init = False
+    init2 = False
+    centers = []
+    for name in names:
+        print(name)
+        if ((int(persons[0]) == 3) and (name == "000499")): #missing bin
+            continue
+        depth = read_depth_from_bin("data/P"+str(persons[0])+"/5/"+name+"_depth.bin")
+
+        #get centers
+        center = get_center(depth)
+        centers.append(center)
+
+        #get cube and resize to 96x96
+        depth = _crop_image(depth, center, is_debug=False)
+        #normalize
+        #depth = normalize(depth)
+        assert not np.any(np.isnan(depth))
+        assert ((depth>1).sum() == 0)
+        assert ((depth<-1).sum() == 0)
+        augment_translate = augment_translation(depth)
+        # augment_rotate = augment_rotation(depth)
+        # augmented = augment_translate + augment_rotate
+        depth = (torch.from_numpy(np.asarray(augment_translate)))
+        # print(depth.shape)
+        if (not init):
+            tmp = depth
+            init = True
+        else:
+            tmp= torch.cat((tmp,depth),0)
+        if (int(name) % 50 == 0) and (int(name) is not 0):
+            print("pickling..")
+            print(tmp.shape)
+            tmp = tmp.numpy()
+            with h5py.File("data_augmented/P0/"+str(persons[0])+"_"+str(int(name))+'.h5', 'w') as h5f:
+                h5f.create_dataset('dataset_1', data=tmp)
+            init = False
+
+    with h5py.File("data_augmented/P0/"+str(persons[0])+"_"+str(int(name))+'.h5', 'w') as h5f:
+        h5f.create_dataset('dataset_1', data=tmp)
+
+
 def read_joints(persons=[0,1,2,3,4,5,6], augment=False):
     joints = []
     for person in persons:
         with open("data/P"+str(person)+"/5/joint.txt") as f:
             num_joints = int(f.readline())
             for i in range(num_joints):
-                if augment:
-                    tmp = np.fromstring(f.readline(),sep=' ')
-                    for i in range(802):
-                        joints.append(tmp)
-                else:
-                    joints.append(np.fromstring(f.readline(),sep=' '))
+                joints.append(np.fromstring(f.readline(),sep=' '))
 
     joints = torch.from_numpy(np.asarray(joints))
+    joints_augmented = []
+    if augment:
+        joints = joints.numpy()
+        joints = joints.reshape(3499,21,3)
+        for joint in joints:
+            joint = world2pixel(joint)
+            for i in range(-10, 11):    #left/right
+                for j in range(-10, 11):    #up/down
+                    a = np.array([i, j, 0])
+                    b = np.tile(a,(21,1))
+                    joint = joint + b
+                    joints_augmented.append(joint)
 
-
+    joints_augmented = np.asarray(joints_augmented)
+    print("augmented shape")
+    print(joints_augmented.shape)
     return joints
 
-def normalize(array):
-    min = np.min(array)
-    max = np.max(array)
-    array = (2 * ((array - min)/(max - min))) -1
-
-    return array
 
 def augment_translation(depth):
     augment_translation = []
@@ -164,7 +217,6 @@ def augment_translation(depth):
         for j in range(-10, 11):
             M = np.float32([[1,0,i],[0,1,j]])
             augment_translation.append(cv2.warpAffine(depth,M,(cols,rows)))
-
     return augment_translation
 
 def augment_scaling(depth):
@@ -184,5 +236,20 @@ def augment_rotation(depth):
         augment_rotate.append(cv2.warpAffine(depth,M,(cols,rows)))
     return augment_rotate
 
+def world2pixel(x):
+    fx, fy, ux, uy = 241.42, 241.42, 160, 120
+    x[:, 0] = x[:, 0] * fx / x[:, 2] + ux
+    x[:, 1] = x[:, 1] * fy / x[:, 2] + uy
+    return x
 
-read_MSRA(persons=[sys.argv[1]], pickle=True)
+# read_MSRA_test(persons=[sys.argv[1]], pickleit=True)
+# read_joints(augment=True)
+# total_size = 0
+for root, dirs, files in os.walk("data_augmented", topdown=False):
+    for file in files:
+        print(os.path.join(root,file))
+        # with h5py.File(os.path.join(root,file), 'r') as hf:
+        #     data = hf['dataset_1'][:]
+        #     print(data.shape[0])
+        #     total_size += data.shape[0]
+# print(total_size)

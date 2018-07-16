@@ -1,5 +1,5 @@
 from MSRADataset import MSRADataset
-from MSRADataset import read_depth_from_bin, get_center, _crop_image, normalize, read_joints, augment_translation, augment_scaling, augment_rotation
+from MSRADataset import read_depth_from_bin, get_center, _crop_image, read_joints, augment_translation, augment_scaling, augment_rotation
 from REN import REN
 import torch.optim
 import torch.nn as nn
@@ -63,6 +63,7 @@ def main(resume=False):
     val_loss = []
     val_acc = []
     mean_errors = []
+    best = False
     for epoch in range(0,150):
         adjust_learning_rate(optimizer, epoch)
 
@@ -81,9 +82,11 @@ def main(resume=False):
             'optimizer' : optimizer.state_dict(),
         }
 
-        if (epoch > 1) and (mean_errors[epoch] < min(mean_errors)):
-            print("saving best performing checkpoint on val")
-            save_checkpoint(state, True)
+        if (epoch > 1) :
+            best = (mean_error < min(mean_errors[:len(mean_errors)-1]))
+            if best:
+                print("saving best performing checkpoint on val")
+                save_checkpoint(state, True)
 
         save_checkpoint(state, False)
 
@@ -176,12 +179,7 @@ def compute_distance_error(output, target):
 
 def draw_pose(img, pose):
     for pt in pose:
-        print(pt)
         cv2.circle(img, (int(pt[0]), int(pt[1])), 3, (0, 0, 255), -1)
-        cv2.imshow('result', img)
-        ch = cv2.waitKey(0)
-        if ch == ord('q'):
-            exit(0)
 
     for x, y in [(0, 1), (1, 2), (2, 3), (3, 4), (0, 5), (5, 6), (6, 7), (7, 8),
                 (0, 9), (9, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15), (15, 16),
@@ -191,34 +189,27 @@ def draw_pose(img, pose):
 
     return img
 
-def _transform_pose(poses, centers):
-    _fx, _fy, _ux, _uy = 241.42, 241.42, 160, 120
-    res_poses = poses * 150
-    num_joint = 21
-    centers_tile = np.tile(centers, (num_joint, 1, 1)).transpose([1, 0, 2])
-    res_poses[:, 0::3] = res_poses[:, 0::3] * _fx / centers_tile[:, :, 2] + centers_tile[:, :, 0]
-    res_poses[:, 1::3] = res_poses[:, 1::3] * _fy / centers_tile[:, :, 2] + centers_tile[:, :, 1]
-    res_poses[:, 2::3] += centers_tile[:, :, 2]
-    res_poses = np.reshape(res_poses, [poses.shape[0], -1, 3])
-    return res_poses
+def world2pixel(x):
+    fx, fy, ux, uy = 241.42, 241.42, 160, 120
+    x[:, 0] = x[:, 0] * fx / x[:, 2] + ux
+    x[:, 1] = x[:, 1] * fy / x[:, 2] + uy
+    return x
 
 if __name__ == '__main__':
-    main()
-    # joints =read_joints()[0].numpy()
-    # center =get_center(read_depth_from_bin("data/P0/5/000000_depth.bin"))
-    # depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
-    # depth = _crop_image(depth, center, is_debug=False)
-    #
-    # augment_translation = augment_translation(depth)
-    # augment_rotate = augment_rotation(depth)
-    # augmented = augment_translation + augment_rotate
-    # print(len(augmented))
-    # for dst in augmented:
-    #     img_show = (dst + 1) / 2;
-    #     hehe = cv2.resize(img_show, (512, 512))
-    #     cv2.imshow('debug', dst)
-    #     ch = cv2.waitKey(0)
-    #     if ch == ord('q'):
-    #         exit(0)
+    # main()
+    joints =read_joints()[0].numpy()
+    center =get_center(read_depth_from_bin("data/P0/5/000000_depth.bin"))
+    depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
+    depth = _crop_image(depth, center, is_debug=False)
+    joints = joints.reshape(21,3)
+    print(joints.shape)
+    joints = world2pixel(joints)
+    print(joints.shape)
+    depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
+    dst = draw_pose(depth, joints)
     # img_show = (dst + 1) / 2;
     # hehe = cv2.resize(img_show, (512, 512))
+    # cv2.imshow('debug', dst)
+    # ch = cv2.waitKey(0)
+    # if ch == ord('q'):
+    #     exit(0)
