@@ -14,10 +14,10 @@ import cv2
 OUTFILE = "results"
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 10 epochs"""
-    if epoch < 11:
-        lr = 0.0005 * (0.1 ** (epoch // 10))
-    else:
-        lr = 0.0005 * (0.1 ** (epoch // 5))
+    # if epoch < 11:
+    #     lr = 0.0005 * (0.1 ** (epoch // 10))
+    # else:
+    lr = 0.0005 * (0.1 ** (epoch // 20))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -44,7 +44,7 @@ def main(resume=False):
     if resume:
         val_loader = torch.utils.data.DataLoader(
            test_dataset, batch_size= 64 ,
-           num_workers=4, pin_memory=True)
+           num_workers=2, pin_memory=True)
 
         model, optimizer = load_checkpoint("1_checkpoint.pth.tar", model, optimizer)
         validate(val_loader, model, criterion)
@@ -52,12 +52,12 @@ def main(resume=False):
 
     train_loader = torch.utils.data.DataLoader(
        train_dataset, batch_size=64, shuffle = True,
-       num_workers=4, pin_memory=True)
+       num_workers=2, pin_memory=True)
 
 
     val_loader = torch.utils.data.DataLoader(
        test_dataset, batch_size=64  ,shuffle = True,
-       num_workers=4, pin_memory=True)
+       num_workers=2, pin_memory=True)
 
     train_loss = []
     val_loss = []
@@ -91,9 +91,9 @@ def main(resume=False):
         save_checkpoint(state, False)
 
     np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_train_loss.out",train_loss)
-    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "val_loss.out",val_loss)
-    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "val_acc.out",val_acc)
-    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "mean_errors.out",mean_errors)
+    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_loss.out",val_loss)
+    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_acc.out",val_acc)
+    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_mean_errors.out",mean_errors)
 
 
 
@@ -196,17 +196,17 @@ def world2pixel(x):
     return x
 
 if __name__ == '__main__':
-    # main()
-    joints =read_joints()[0].numpy()
-    center =get_center(read_depth_from_bin("data/P0/5/000000_depth.bin"))
-    depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
-    depth = _crop_image(depth, center, is_debug=False)
-    joints = joints.reshape(21,3)
-    print(joints.shape)
-    joints = world2pixel(joints)
-    print(joints.shape)
-    depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
-    dst = draw_pose(depth, joints)
+    main()
+    # joints =read_joints()[0].numpy()
+    # center =get_center(read_depth_from_bin("data/P0/5/000000_depth.bin"))
+    # depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
+    # depth = _crop_image(depth, center, is_debug=False)
+    # joints = joints.reshape(21,3)
+    # print(joints.shape)
+    # joints = world2pixel(joints)
+    # print(joints.shape)
+    # depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
+    # dst = draw_pose(depth, joints)
     # img_show = (dst + 1) / 2;
     # hehe = cv2.resize(img_show, (512, 512))
     # cv2.imshow('debug', dst)
