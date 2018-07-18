@@ -41,7 +41,7 @@ class MSRADataset(Dataset):
         file_index = np.floor(index/441)
         file_name = self._get_file_name(file_index)
         hf_index = index % 441
-        with h5py.File(os.path.join(root,file), 'r') as hf:
+        with h5py.File(os.path.join("data_test",file_name), 'r') as hf:
             data = torch.tensor(hf['dataset_1'][hf_index:hf_index+1])
 
         return data, self.joints[index]
@@ -51,22 +51,22 @@ class MSRADataset(Dataset):
         assert(file_index <3499)
         if self.training:
             if file_index <= 499:
-                file_name = "0_" + str(file_index)
+                file_name = "0_" + str(int(file_index))
             elif file_index <= 999:
-                file_name = "1_" + str(file_index-500)
+                file_name = "1_" + str(int(file_index-500))
             elif file_index <= 1499:
-                file_name = "2_" + str(file_index-1000)
+                file_name = "2_" + str(int(file_index-1000))
             elif file_index <= 1998:
-                file_name = "3_" + str(file_index-1500)
+                file_name = "3_" + str(int(file_index-1500))
             elif file_index <= 2498:
-                file_name = "4_" + str(file_index-1999)
+                file_name = "4_" + str(int(file_index-1999))
             elif file_index <= 2998:
-                file_name = "5_" + str(file_index-2499)
+                file_name = "5_" + str(int(file_index-2499))
             elif file_index <= 3498:
-                file_name = "6_" + str(file_index-2999)
+                file_name = "6_" + str(int(file_index-2999))
         else:
-            file_name = "7_" + str(file_index)
-        return file_name
+            file_name = "7_" + str(int(file_index))
+        return file_name+".h5"
 
 
 def get_center(img, upper=1000, lower=10):
@@ -225,10 +225,11 @@ def read_joints(persons=[0,1,2,3,4,5,6], augment=False):
         for joint in joints:
             for i in range(-10, 11):    #left/right
                 for j in range(-10, 11):    #up/down
+                    tmp = joint
                     a = np.array([i, j, 0])
                     b = np.tile(a,(21,1))
-                    joint = joint + b
-                    joints_augmented.append(joint)
+                    tmp = tmp + b
+                    joints_augmented.append(tmp)
 
         joints_augmented = (np.asarray(joints_augmented)).reshape(-1,63)
         return torch.from_numpy(joints_augmented)
@@ -269,12 +270,18 @@ def world2pixel(x):
     return x
 
 # read_MSRA_test(persons=[sys.argv[1]], pickleit=True)
-# read_joints(augment=True)
+# joints = read_joints([7],augment=True).numpy()
+# assert ((joints>319).sum() == 0)
+# print(joints[0].reshape(21,3)[0])
+# print(joints[1].reshape(21,3)[0])
+# print(joints[2].reshape(21,3)[0])
+# print(joints[3].reshape(21,3)[0])
+# print(joints[4].reshape(21,3)[0])
 # joints = read_joints(augment=True)
 # print(joints.shape)
 # for root, dirs, files in os.walk("data_test", topdown=False):
 #     for file in files:
-        # print(os.path.join(root,file))
+#         print(os.path.join(root,file))
 # with h5py.File("data_test/0_0.h5", 'r') as hf:
 #     data = torch.tensor(hf['dataset_1'][0:1])
 #     print(data.shape)

@@ -11,13 +11,15 @@ import numpy as np
 import time
 import cv2
 
+print_interval = 100
 OUTFILE = "results"
+
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 10 epochs"""
     # if epoch < 11:
     #     lr = 0.0005 * (0.1 ** (epoch // 10))
     # else:
-    lr = 0.0005 * (0.1 ** (epoch // 20))
+    lr = 0.0005 * (0.1 ** (epoch // 1))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -64,7 +66,7 @@ def main(resume=False):
     val_acc = []
     mean_errors = []
     best = False
-    for epoch in range(0,150):
+    for epoch in range(0,1):
         adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
@@ -100,10 +102,12 @@ def main(resume=False):
 
 def train(train_loader, model, criterion, optimizer, epoch):
 
+
     # switch to train mode
     model.train()
     loss_train = []
     for i, (input, target) in enumerate(train_loader):
+        stime = time.time()
         # measure data loading time
 
         target = target.double()
@@ -120,12 +124,21 @@ def train(train_loader, model, criterion, optimizer, epoch):
         loss.backward()
         loss_train.append(loss.data.item())
         optimizer.step()
-
+        np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_iteration_train_loss.out", np.asarray(loss_train))
         # measure elapsed time
-        if i % 30 == 0:
+        if i % print_interval == 0:
+            state = {
+                'iteration': i+1,
+                'arch': "REN",
+                'state_dict': model.state_dict(),
+                'optimizer' : optimizer.state_dict(),
+            }
+            save_checkpoint(state, False, filename='checkpoints/' + str(i+1) + "_checkpoint.pth.tar")
+            TT = time.time() -stime
             print('Epoch: [{0}][{1}/{2}]\t'
-                  'Loss {loss:.4f}\t'.format(
-                   epoch, i, len(train_loader), loss=loss.data[0]))
+                  'Loss {loss:.4f}\t'
+                  'Time: {time:.2f}\t'.format(
+                   epoch, i, len(train_loader), loss=loss.data[0], time= TT))
 
     return [np.mean(loss_train)]
 
@@ -199,8 +212,24 @@ if __name__ == '__main__':
     main()
     # joints =read_joints()[0].numpy()
     # center =get_center(read_depth_from_bin("data/P0/5/000000_depth.bin"))
-    # depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
+    # depth = read_depth_from_bin("data/P8/5/000000_depth.bin")
+    # center = get_center(depth)
     # depth = _crop_image(depth, center, is_debug=False)
+    # torch.no_grad()
+    # model = REN()
+    # optimizer = torch.optim.SGD(model.parameters(), 0.005,
+    #                             momentum=0.9,
+    #                             weight_decay=0.0005)
+    #
+    # model, optimizer = load_checkpoint("a_checkpoint.pth.tar", model, optimizer)
+    # model.eval()
+    # depth = torch.from_numpy(depth)
+    # depth = torch.unsqueeze(depth, 0)
+    # depth = torch.unsqueeze(depth, 0)
+    # print(depth.shape)
+    # results = model(depth)
+    # results = (results[0].detach().numpy()).reshape(21,3)
+    # print(results)
     # joints = joints.reshape(21,3)
     # print(joints.shape)
     # joints = world2pixel(joints)
