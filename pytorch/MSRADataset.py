@@ -264,6 +264,8 @@ def augment_rotation(depth):
     return augment_rotate
 
 def world2pixel(x):
+    x[:, 1] = x[:, 1] * -1
+    x[:, 2] = x[:, 2] * -1
     fx, fy, ux, uy = 241.42, 241.42, 160, 120
     x[:, 0] = x[:, 0] * fx / x[:, 2] + ux
     x[:, 1] = x[:, 1] * fy / x[:, 2] + uy

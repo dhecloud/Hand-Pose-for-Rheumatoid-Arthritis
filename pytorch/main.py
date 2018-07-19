@@ -23,7 +23,14 @@ def adjust_learning_rate(optimizer, epoch):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-
+def adjust_learning_rate_by_iteration(optimizer, iteration):
+    """Sets the learning rate to the initial LR decayed by 10 every 10 epochs"""
+    # if epoch < 11:
+    #     lr = 0.0005 * (0.1 ** (epoch // 10))
+    # else:
+    lr = 0.0005 * (0.1 ** (iteration // 10000))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
 
 
 def main(resume=False):
@@ -38,7 +45,6 @@ def main(resume=False):
     optimizer = torch.optim.SGD(model.parameters(), 0.0005,
                                 momentum=0.9,
                                 weight_decay=0.0005)
-
 
 
 
@@ -202,16 +208,11 @@ def draw_pose(img, pose):
 
     return img
 
-def world2pixel(x):
-    fx, fy, ux, uy = 241.42, 241.42, 160, 120
-    x[:, 0] = x[:, 0] * fx / x[:, 2] + ux
-    x[:, 1] = x[:, 1] * fy / x[:, 2] + uy
-    return x
 
 if __name__ == '__main__':
     main()
     # joints =read_joints()[0].numpy()
-    # center =get_center(read_depth_from_bin("data/P0/5/000000_depth.bin"))
+    # # center =get_center(read_depth_from_bin("data/P0/5/000000_depth.bin"))
     # depth = read_depth_from_bin("data/P8/5/000000_depth.bin")
     # center = get_center(depth)
     # depth = _crop_image(depth, center, is_debug=False)
@@ -221,7 +222,7 @@ if __name__ == '__main__':
     #                             momentum=0.9,
     #                             weight_decay=0.0005)
     #
-    # model, optimizer = load_checkpoint("a_checkpoint.pth.tar", model, optimizer)
+    # model, optimizer = load_checkpoint("checkpoints/1601_checkpoint.pth.tar", model, optimizer)
     # model.eval()
     # depth = torch.from_numpy(depth)
     # depth = torch.unsqueeze(depth, 0)
@@ -230,15 +231,13 @@ if __name__ == '__main__':
     # results = model(depth)
     # results = (results[0].detach().numpy()).reshape(21,3)
     # print(results)
-    # joints = joints.reshape(21,3)
-    # print(joints.shape)
-    # joints = world2pixel(joints)
-    # print(joints.shape)
-    # depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
-    # dst = draw_pose(depth, joints)
-    # img_show = (dst + 1) / 2;
-    # hehe = cv2.resize(img_show, (512, 512))
-    # cv2.imshow('debug', dst)
+    # print(joints.reshape(21,3))
+    # depth = read_depth_from_bin("data/P8/5/000000_depth.bin")
+    # depth1 = read_depth_from_bin("data/P8/5/000000_depth.bin")
+    # dst = draw_pose(depth, results)
+    # res = draw_pose(depth1, joints.reshape(21,3))
+    # cv2.imshow('results', dst)
+    # cv2.imshow('truth', res)
     # ch = cv2.waitKey(0)
     # if ch == ord('q'):
     #     exit(0)
