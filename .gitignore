@@ -7,6 +7,7 @@
 *.tar
 *.pth.tar
 *.tar.pth
+*.ini
 
 # User-specific files
 *.suo
