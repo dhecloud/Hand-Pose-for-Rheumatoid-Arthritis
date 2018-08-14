@@ -1,54 +1,76 @@
+import cv2
 import h5py
 from torch.utils.data import Dataset
 import torch
 import numpy as np
-import cv2
 from torchvision import transforms
 import pickle
 import sys
 import time
 import os
+import random
 
 class MSRADataset(Dataset):
-    def __init__(self, training=True):
+    def __init__(self, training=True, augment = False):
         # transforms.RandomAffine(degrees = 0,translate=(-10,10))
         # self.transforms = transforms.Compose([
         #      transforms.RandomRotation(90),
         #      transforms.RandomHorizontalFlip()
         #   ])
         self.training = training
+        self.augment = augment
         if self.training:
-            self.length = 1543059
-            self.joints = read_joints(augment=True)
+            self.length = 500*7 - 1
+            self.joints = read_joints()
         else:
-            self.length = 220500
-            self.joints = read_joints([7],augment=True)
-        # if training:
-        #     self.images = read_MSRA(augment =False)
-        #     print("Shape of training images: " + str(self.images.shape))
-        #     self.joints = read_joints(augment=False)
-        #     print("Shape of training joints: " + str(self.joints.shape))
-        # else:
-        #     self.images = (read_MSRA([7], augment =False))
-        #     print("Shape of testing images: " + str(self.images.shape))
-        #     self.joints = read_joints([7], augment =False)
-        #     print("Shape of testing joints: " + str(self.joints.shape))
+            self.length = 500
+            self.joints = read_joints([8])
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, index):
-        file_index = np.floor(index/441)
-        file_name = self._get_file_name(file_index)
-        hf_index = index % 441
-        with h5py.File(os.path.join("data_test",file_name), 'r') as hf:
-            data = torch.tensor(hf['dataset_1'][hf_index:hf_index+1])
+        joint = self.joints[index]
 
-        return data, self.joints[index]
+        if self.training:
+            if index <= 1998:
+                person = int(np.floor(index/500))
+                name = index % 500
+                name = '%06d' % name
+            else:
+                person = int(np.floor((index+1)/500))
+                name = (index - 499) % 500
+                name = '%06d' % name
+            depth = read_depth_from_bin("data/P"+str(person)+"/5/"+str(name)+"_depth.bin")
+        else:
+            person = 8
+            name = (index - 499) % 500
+            name = '%06d' % name
+            depth = read_depth_from_bin("data/P"+str(person)+"/5/"+str(name)+"_depth.bin")
+
+        if self.augment:
+            data,joint = data_augment_chance(depth,joint, p = 0.8)
+            data = (torch.tensor(np.asarray(data))).unsqueeze(0)
+            joint = torch.tensor(joint)
+
+        else:
+            center = get_center(depth)
+            depth = _crop_image(depth, center, is_debug=False)
+            data = torch.tensor(np.asarray(depth))
+            data = data.unsqueeze(0)
+
+
+        # file_index = np.floor(index/441)
+        # file_name = self._get_file_name(file_index)
+        # hf_index = index % 441
+        # with h5py.File(os.path.join("data_test",file_name), 'r') as hf:
+        #     data = torch.tensor(hf['dataset_1'][hf_index:hf_index+1])
+
+        return data, joint
 
     def _get_file_name(self,file_index):
         assert(file_index>= 0)
-        assert(file_index <3499)
+        assert(file_index <3999)
         if self.training:
             if file_index <= 499:
                 file_name = "0_" + str(int(file_index))
@@ -64,8 +86,10 @@ class MSRADataset(Dataset):
                 file_name = "5_" + str(int(file_index-2499))
             elif file_index <= 3498:
                 file_name = "6_" + str(int(file_index-2999))
+            elif file_index <= 3998:
+                file_name = "7_" + str(int(file_index-3499))
         else:
-            file_name = "7_" + str(int(file_index))
+            file_name = "8_" + str(int(file_index))
         return file_name+".h5"
 
 
@@ -170,7 +194,7 @@ def read_MSRA(persons=[0,1,2,3,4,5,6], augment =False, pickle=False): #list of p
         pickle.dump(depth_images, open(str(persons[0])+'.p', 'wb'))
     return depth_images
 
-def read_MSRA_test(persons=[0,1,2,3,4,5,6], augment =False, pickleit=False): #list of persons
+def read_MSRA_save_h5(persons=[0,1,2,3,4,5,6], augment =False, pickleit=False): #list of persons
     names = ['{:d}'.format(i).zfill(6) for i in range(500)]
     init = False
     init2 = False
@@ -203,9 +227,32 @@ def read_MSRA_test(persons=[0,1,2,3,4,5,6], augment =False, pickleit=False): #li
             h5f.create_dataset('dataset_1', data=depth)
         init = False
 
+def data_augment_chance(depth, joint, p = 0.5):
+    center = get_center(depth)
+    depth = _crop_image(depth, center, is_debug=False)
+    assert not np.any(np.isnan(depth))
+    assert ((depth>1).sum() == 0)
+    assert ((depth<-1).sum() == 0)
+    roll = random.uniform(0,1)
+    if roll < p:
+        rows,cols = depth.shape
+        i = random.randint(-10,10)
+        j = random.randint(-10,10)
+        M = np.float32([[1,0,i],[0,1,j]])
+        depth = cv2.warpAffine(depth,M,(cols,rows))
+
+        joint = joint.numpy().reshape(21,3)
+        tmp = joint
+        a = np.array([i, j, 0])
+        b = np.tile(a,(21,1))
+        tmp = tmp + b
+        joint = tmp.reshape(63)
+
+    return depth, joint
 
 
-def read_joints(persons=[0,1,2,3,4,5,6], augment=False):
+
+def read_joints(persons=[0,1,2,3,4,5,6,7]):
     joints = []
     for person in persons:
         with open("data/P"+str(person)+"/5/joint.txt") as f:
@@ -218,21 +265,21 @@ def read_joints(persons=[0,1,2,3,4,5,6], augment=False):
                 joints.append(joint)
 
     joints = torch.from_numpy(np.asarray(joints))
-    if augment:
-        joints_augmented = []
-        joints = joints.numpy()
-        joints = joints.reshape(-1,21,3)
-        for joint in joints:
-            for i in range(-10, 11):    #left/right
-                for j in range(-10, 11):    #up/down
-                    tmp = joint
-                    a = np.array([i, j, 0])
-                    b = np.tile(a,(21,1))
-                    tmp = tmp + b
-                    joints_augmented.append(tmp)
-
-        joints_augmented = (np.asarray(joints_augmented)).reshape(-1,63)
-        return torch.from_numpy(joints_augmented)
+    # if augment:
+    #     joints_augmented = []
+    #     joints = joints.numpy()
+    #     joints = joints.reshape(-1,21,3)
+    #     for joint in joints:
+    #         for i in range(-10, 11):    #left/right
+    #             for j in range(-10, 11):    #up/down
+    #                 tmp = joint
+    #                 a = np.array([i, j, 0])
+    #                 b = np.tile(a,(21,1))
+    #                 tmp = tmp + b
+    #                 joints_augmented.append(tmp)
+    #
+    #     joints_augmented = (np.asarray(joints_augmented)).reshape(-1,63)
+    #     return torch.from_numpy(joints_augmented)
 
     return joints
 
@@ -271,24 +318,8 @@ def world2pixel(x):
     x[:, 1] = x[:, 1] * fy / x[:, 2] + uy
     return x
 
-# read_MSRA_test(persons=[sys.argv[1]], pickleit=True)
-# joints = read_joints([7],augment=True).numpy()
-# assert ((joints>319).sum() == 0)
-# print(joints[0].reshape(21,3)[0])
-# print(joints[1].reshape(21,3)[0])
-# print(joints[2].reshape(21,3)[0])
-# print(joints[3].reshape(21,3)[0])
-# print(joints[4].reshape(21,3)[0])
-# joints = read_joints(augment=True)
-# print(joints.shape)
-# for root, dirs, files in os.walk("data_test", topdown=False):
-#     for file in files:
-#         print(os.path.join(root,file))
-# with h5py.File("data_test/0_0.h5", 'r') as hf:
-#     data = torch.tensor(hf['dataset_1'][0:1])
-#     print(data.shape)
-#     print(data)
-#             if data.shape[0] != 441:
-#                 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-#             total_size += data.shape[0]
-# print(total_size)
+# with h5py.File(os.path.join("data_test","7_0.h5"), 'r') as hf:
+#     depth_main = torch.tensor(hf['dataset_1'][0:1])
+# print(depth_main.shape)
+# msra = MSRADataset(augment = True)
+# msra.__getitem__(1)

@@ -1,3 +1,4 @@
+import cv2
 from MSRADataset import MSRADataset
 from MSRADataset import read_depth_from_bin, get_center, _crop_image, read_joints, augment_translation, augment_scaling, augment_rotation
 from REN import REN
@@ -8,18 +9,16 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import numpy as np
-import time
-import cv2
 
-print_interval = 100
+import time
+
+print_interval = 1
 OUTFILE = "results"
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 10 epochs"""
-    # if epoch < 11:
-    #     lr = 0.0005 * (0.1 ** (epoch // 10))
-    # else:
-    lr = 0.0005 * (0.1 ** (epoch // 1))
+    lr = 0.00005
+    # lr = 0.0005 * (0.1 ** (epoch // 100))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -40,8 +39,8 @@ def main(resume=False):
     cudnn.benchmark = True
     criterion = nn.SmoothL1Loss().cuda()
 
-    train_dataset = MSRADataset()
-    test_dataset = MSRADataset(False)
+    train_dataset = MSRADataset(training = True, augment =True)
+    test_dataset = MSRADataset(training = False, augment= False)
     optimizer = torch.optim.SGD(model.parameters(), 0.0005,
                                 momentum=0.9,
                                 weight_decay=0.0005)
@@ -52,7 +51,7 @@ def main(resume=False):
     if resume:
         val_loader = torch.utils.data.DataLoader(
            test_dataset, batch_size= 64 ,
-           num_workers=2, pin_memory=True)
+           num_workers=1, pin_memory=True)
 
         model, optimizer = load_checkpoint("1_checkpoint.pth.tar", model, optimizer)
         validate(val_loader, model, criterion)
@@ -60,29 +59,37 @@ def main(resume=False):
 
     train_loader = torch.utils.data.DataLoader(
        train_dataset, batch_size=64, shuffle = True,
-       num_workers=2, pin_memory=True)
+       num_workers=1, pin_memory=True)
 
 
     val_loader = torch.utils.data.DataLoader(
        test_dataset, batch_size=64  ,shuffle = True,
-       num_workers=2, pin_memory=True)
+       num_workers=1, pin_memory=True)
 
     train_loss = []
     val_loss = []
     val_acc = []
     mean_errors = []
     best = False
-    for epoch in range(0,1):
+    model, optimizer = load_checkpoint("checkpoints/16201_checkpoint.pth.tar", model, optimizer)
+
+    for epoch in range(0,1000):
         adjust_learning_rate(optimizer, epoch)
+        # np.savetxt("history/1.out", [0])
 
         # train for one epoch
         loss_train = train(train_loader, model, criterion, optimizer, epoch)
+        # np.savetxt("history/1.out", [1])
         train_loss = train_loss + loss_train
+        # np.savetxt("history/1.out", [2])
         # evaluate on validation set
         loss_val, mean_error = validate(val_loader, model, criterion)
+        # np.savetxt("history/1.out", [3])
         val_loss = val_loss + loss_val
+        # np.savetxt("history/1.out", [4])
         mean_errors += mean_error
-        print(mean_errors)
+        # np.savetxt("history/1.out", [5])
+        #print(mean_errors)
         state = {
             'epoch': epoch + 1,
             'arch': "REN",
@@ -97,11 +104,11 @@ def main(resume=False):
                 save_checkpoint(state, True)
 
         save_checkpoint(state, False)
-
-    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_train_loss.out",train_loss)
-    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_loss.out",val_loss)
-    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_acc.out",val_acc)
-    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_mean_errors.out",mean_errors)
+    #
+    # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_train_loss.out",train_loss)
+    # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_loss.out",val_loss)
+    # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_acc.out",val_acc)
+    # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_mean_errors.out",mean_errors)
 
 
 
@@ -130,7 +137,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         loss.backward()
         loss_train.append(loss.data.item())
         optimizer.step()
-        np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_iteration_train_loss.out", np.asarray(loss_train))
+        # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_iteration_train_loss.out", np.asarray(loss_train))
         # measure elapsed time
         if i % print_interval == 0:
             state = {
@@ -141,7 +148,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
             }
             save_checkpoint(state, False, filename='checkpoints/' + str(i+1) + "_checkpoint.pth.tar")
             TT = time.time() -stime
-            print('Epoch: [{0}][{1}/{2}]\t'
+            print('epoch: [{0}][{1}/{2}]\t'
                   'Loss {loss:.4f}\t'
                   'Time: {time:.2f}\t'.format(
                    epoch, i, len(train_loader), loss=loss.data[0], time= TT))
@@ -208,32 +215,51 @@ def draw_pose(img, pose):
 
     return img
 
-
 if __name__ == '__main__':
-    main()
-    # joints =read_joints()[0].numpy()
-    # # center =get_center(read_depth_from_bin("data/P0/5/000000_depth.bin"))
-    # depth = read_depth_from_bin("data/P8/5/000000_depth.bin")
-    # center = get_center(depth)
-    # depth = _crop_image(depth, center, is_debug=False)
+    try:
+        main()
+    except e:
+        with open("history/error.out",'w') as f:
+            f.write(e)
+    # import h5py
+    # import os
+    # joints = read_joints(persons=[7],augment=True)[0].numpy()
+    # hf_index = 0
+    # center = get_center(read_depth_from_bin("data/P7/5/000000_depth.bin"))
+    # with h5py.File(os.path.join("data_test","7_0.h5"), 'r') as hf:
+    #     depth_main = torch.tensor(hf['dataset_1'][hf_index:hf_index+1])
+    # depth_main = torch.unsqueeze(depth_main, 0)
+    # # depth = read_depth_from_bin("data/po/5/000001_depth.bin")
+    # # print(depth11.shape)
+    # # center = get_center(depth)
+    # # depth = _crop_image(depth, center, is_debug=False)
     # torch.no_grad()
     # model = REN()
     # optimizer = torch.optim.SGD(model.parameters(), 0.005,
     #                             momentum=0.9,
     #                             weight_decay=0.0005)
     #
-    # model, optimizer = load_checkpoint("checkpoints/1601_checkpoint.pth.tar", model, optimizer)
+    # model, optimizer = load_checkpoint("checkpoints/39101_checkpoint.pth.tar", model, optimizer)
     # model.eval()
-    # depth = torch.from_numpy(depth)
-    # depth = torch.unsqueeze(depth, 0)
-    # depth = torch.unsqueeze(depth, 0)
-    # print(depth.shape)
-    # results = model(depth)
+    # # depth = torch.from_numpy(depth)
+    # # depth = torch.unsqueeze(depth, 0)
+    # print(depth_main.shape)
+    # M = np.float32([[1,0,-10],[0,1,-10]])
+    # rows,cols = read_depth_from_bin("data/P7/5/000000_depth.bin").shape
+    # depth = (cv2.warpAffine(read_depth_from_bin("data/P7/5/000000_depth.bin"),M,(cols,rows)))
+    # depth1 = (cv2.warpAffine(read_depth_from_bin("data/P7/5/000000_depth.bin"),M,(cols,rows)))
+    # stime = time.time()
+    # results = model(depth_main)
+    # etime = time.time()
+    # print("Time taken: " + str(etime-stime))
+    # print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joints))))
     # results = (results[0].detach().numpy()).reshape(21,3)
-    # print(results)
-    # print(joints.reshape(21,3))
-    # depth = read_depth_from_bin("data/P8/5/000000_depth.bin")
-    # depth1 = read_depth_from_bin("data/P8/5/000000_depth.bin")
+    # # print(results)
+    # # print(joints.reshape(21,3))
+    # # print(depth.shape)
+    # # print(depth1.shape)
+    # # print(type(depth))
+    # # print(type(depth1))
     # dst = draw_pose(depth, results)
     # res = draw_pose(depth1, joints.reshape(21,3))
     # cv2.imshow('results', dst)
