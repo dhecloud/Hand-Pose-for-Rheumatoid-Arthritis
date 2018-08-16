@@ -20,11 +20,11 @@ class MSRADataset(Dataset):
         self.training = training
         self.augment = augment
         if self.training:
-            self.length = 500*7 - 1
-            self.joints = read_joints()
+            self.joints, self.keys = read_joints()
+            self.length = len(self.joints)
         else:
-            self.length = 500
-            self.joints = read_joints([8])
+            self.joints,self.keys = read_joints([8])
+            self.length = len(self.joints)
 
     def __len__(self):
         return self.length
@@ -33,20 +33,24 @@ class MSRADataset(Dataset):
         joint = self.joints[index]
 
         if self.training:
-            if index <= 1998:
-                person = int(np.floor(index/500))
-                name = index % 500
-                name = '%06d' % name
-            else:
-                person = int(np.floor((index+1)/500))
-                name = (index - 499) % 500
-                name = '%06d' % name
-            depth = read_depth_from_bin("data/P"+str(person)+"/5/"+str(name)+"_depth.bin")
+            person = self.keys[index][0]
+            name = self.keys[index][1]
+            file = '%06d' % int(self.keys[index][2])
+            depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+            # if index <= 1998:
+            #     person = int(np.floor(index/500))
+            #     name = index % 500
+            #     name = '%06d' % name
+            # else:
+            #     person = int(np.floor((index+1)/500))
+            #     name = (index - 499) % 500
+            #     name = '%06d' % name
+            # depth = read_depth_from_bin("data/P"+str(person)+"/5/"+str(name)+"_depth.bin")
         else:
-            person = 8
-            name = (index - 499) % 500
-            name = '%06d' % name
-            depth = read_depth_from_bin("data/P"+str(person)+"/5/"+str(name)+"_depth.bin")
+            person = self.keys[index][0]
+            name = self.keys[index][1]
+            file = '%06d' % int(self.keys[index][2])
+            depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
 
         if self.augment:
             data,joint = data_augment_chance(depth,joint, p = 0.8)
@@ -254,15 +258,21 @@ def data_augment_chance(depth, joint, p = 0.5):
 
 def read_joints(persons=[0,1,2,3,4,5,6,7]):
     joints = []
+    poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']
+    index = 0
+    keys = {}
     for person in persons:
-        with open("data/P"+str(person)+"/5/joint.txt") as f:
-            num_joints = int(f.readline())
-            for i in range(num_joints):
-                joint = np.fromstring(f.readline(),sep=' ')
-                joint = joint.reshape(21,3)
-                joint = world2pixel(joint)
-                joint = joint.reshape(63)
-                joints.append(joint)
+        for pose in poses:
+            with open("data/P"+str(person)+"/"+str(pose)+"/joint.txt") as f:
+                num_joints = int(f.readline())
+                for i in range(num_joints):
+                    joint = np.fromstring(f.readline(),sep=' ')
+                    joint = joint.reshape(21,3)
+                    joint = world2pixel(joint)
+                    joint = joint.reshape(63)
+                    joints.append(joint)
+                    keys[index]= [person,pose,i]
+                    index +=1
 
     joints = torch.from_numpy(np.asarray(joints))
     # if augment:
@@ -281,7 +291,7 @@ def read_joints(persons=[0,1,2,3,4,5,6,7]):
     #     joints_augmented = (np.asarray(joints_augmented)).reshape(-1,63)
     #     return torch.from_numpy(joints_augmented)
 
-    return joints
+    return joints, keys
 
 
 def augment_translation(depth):
@@ -321,5 +331,8 @@ def world2pixel(x):
 # with h5py.File(os.path.join("data_test","7_0.h5"), 'r') as hf:
 #     depth_main = torch.tensor(hf['dataset_1'][0:1])
 # print(depth_main.shape)
-# msra = MSRADataset(augment = True)
-# msra.__getitem__(1)
+msra = MSRADataset(training=False,augment = True)
+print(msra.__getitem__(4)[0].shape)
+# joints, keys = read_joints()
+# print(len(joints))
+# print((keys[67894]))

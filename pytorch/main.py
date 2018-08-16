@@ -1,4 +1,6 @@
 import cv2
+import warnings
+warnings.simplefilter("ignore")
 from MSRADataset import MSRADataset
 from MSRADataset import read_depth_from_bin, get_center, _crop_image, read_joints, augment_translation, augment_scaling, augment_rotation
 from REN import REN
@@ -9,16 +11,17 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import numpy as np
-
+from sys import setrecursionlimit
+setrecursionlimit(20000)
 import time
 
-print_interval = 1
+print_interval = 50
 OUTFILE = "results"
 
 def adjust_learning_rate(optimizer, epoch):
-    """Sets the learning rate to the initial LR decayed by 10 every 10 epochs"""
-    lr = 0.00005
-    # lr = 0.0005 * (0.1 ** (epoch // 100))
+    """Sets the learning rate to the initial LR decayed by 10 every 100 epochs"""
+    # lr = 0.00005
+    lr = 0.0005 * (0.1 ** (epoch // 25))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -51,44 +54,38 @@ def main(resume=False):
     if resume:
         val_loader = torch.utils.data.DataLoader(
            test_dataset, batch_size= 64 ,
-           num_workers=1, pin_memory=True)
+           num_workers=1, pin_memory=False)
 
-        model, optimizer = load_checkpoint("1_checkpoint.pth.tar", model, optimizer)
+        model, optimizer = load_checkpoint("16201_checkpoint.pth.tar", model, optimizer)
         validate(val_loader, model, criterion)
         return
 
     train_loader = torch.utils.data.DataLoader(
-       train_dataset, batch_size=64, shuffle = True,
-       num_workers=1, pin_memory=True)
+       train_dataset, batch_size=256, shuffle = True,
+       num_workers=0, pin_memory=False)
 
 
     val_loader = torch.utils.data.DataLoader(
-       test_dataset, batch_size=64  ,shuffle = True,
-       num_workers=1, pin_memory=True)
+       test_dataset, batch_size=256  ,shuffle = True,
+       num_workers=0, pin_memory=False)
 
     train_loss = []
     val_loss = []
     val_acc = []
     mean_errors = []
     best = False
-    model, optimizer = load_checkpoint("checkpoints/16201_checkpoint.pth.tar", model, optimizer)
+    # model, optimizer = load_checkpoint("checkpoints/55_checkpoint.pth.tar", model, optimizer)
 
-    for epoch in range(0,1000):
+    for epoch in range(0,100):
         adjust_learning_rate(optimizer, epoch)
-        # np.savetxt("history/1.out", [0])
 
         # train for one epoch
         loss_train = train(train_loader, model, criterion, optimizer, epoch)
-        # np.savetxt("history/1.out", [1])
         train_loss = train_loss + loss_train
-        # np.savetxt("history/1.out", [2])
         # evaluate on validation set
         loss_val, mean_error = validate(val_loader, model, criterion)
-        # np.savetxt("history/1.out", [3])
-        val_loss = val_loss + loss_val
-        # np.savetxt("history/1.out", [4])
+        #val_loss = val_loss + loss_val
         mean_errors += mean_error
-        # np.savetxt("history/1.out", [5])
         #print(mean_errors)
         state = {
             'epoch': epoch + 1,
@@ -105,10 +102,10 @@ def main(resume=False):
 
         save_checkpoint(state, False)
     #
-    # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_train_loss.out",train_loss)
-    # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_loss.out",val_loss)
-    # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_acc.out",val_acc)
-    # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_mean_errors.out",mean_errors)
+    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_train_loss.out",train_loss)
+    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_loss.out",val_loss)
+    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_val_acc.out",val_acc)
+    np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_mean_errors.out",mean_errors)
 
 
 
@@ -124,7 +121,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure data loading time
 
         target = target.double()
-        target = target.cuda(non_blocking=True)
+        target = target.cuda(non_blocking=False)
         input = input.double()
         input = input.cuda()
         # compute output
@@ -151,7 +148,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
             print('epoch: [{0}][{1}/{2}]\t'
                   'Loss {loss:.4f}\t'
                   'Time: {time:.2f}\t'.format(
-                   epoch, i, len(train_loader), loss=loss.data[0], time= TT))
+                   epoch, i, len(train_loader), loss=loss.item(), time= TT))
 
     return [np.mean(loss_train)]
 
@@ -169,7 +166,7 @@ def validate(val_loader, model, criterion):
         for i, (input, target) in enumerate(val_loader):
 
             target = target.double()
-            target = target.cuda(non_blocking=True)
+            target = target.cuda(non_blocking=False)
             # compute output
             input = input.double()
             input = input.cuda()
@@ -218,12 +215,12 @@ def draw_pose(img, pose):
 if __name__ == '__main__':
     try:
         main()
-    except e:
+    except Exception as e:
         with open("history/error.out",'w') as f:
-            f.write(e)
+            f.write(str(e))
     # import h5py
     # import os
-    # joints = read_joints(persons=[7],augment=True)[0].numpy()
+    # joints = read_joints(persons=[7])[0].numpy()
     # hf_index = 0
     # center = get_center(read_depth_from_bin("data/P7/5/000000_depth.bin"))
     # with h5py.File(os.path.join("data_test","7_0.h5"), 'r') as hf:
@@ -239,7 +236,7 @@ if __name__ == '__main__':
     #                             momentum=0.9,
     #                             weight_decay=0.0005)
     #
-    # model, optimizer = load_checkpoint("checkpoints/39101_checkpoint.pth.tar", model, optimizer)
+    # model, optimizer = load_checkpoint("checkpoints/55_checkpoint.pth.tar", model, optimizer)
     # model.eval()
     # # depth = torch.from_numpy(depth)
     # # depth = torch.unsqueeze(depth, 0)
