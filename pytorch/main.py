@@ -2,7 +2,7 @@ import cv2
 import warnings
 warnings.simplefilter("ignore")
 from MSRADataset import MSRADataset
-from MSRADataset import read_depth_from_bin, get_center, _crop_image, read_joints, augment_translation, augment_scaling, augment_rotation
+from MSRADataset import read_depth_from_bin, get_center, _crop_image, read_joints, augment_translation, augment_scaling, augment_rotation, data_shrink_chance, data_zoom_chance
 from REN import REN
 import torch.optim
 import torch.nn as nn
@@ -21,7 +21,8 @@ OUTFILE = "results"
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 100 epochs"""
     # lr = 0.00005
-    lr = 0.0005 * (0.1 ** (epoch // 25))
+    lr = 0.0005 * (0.1 ** (epoch // 15))
+    print("LR is " + str(lr)+ " at epoch "+ str(epoch))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -61,12 +62,12 @@ def main(resume=False):
         return
 
     train_loader = torch.utils.data.DataLoader(
-       train_dataset, batch_size=256, shuffle = True,
+       train_dataset, batch_size=512, shuffle = True,
        num_workers=0, pin_memory=False)
 
 
     val_loader = torch.utils.data.DataLoader(
-       test_dataset, batch_size=256  ,shuffle = True,
+       test_dataset, batch_size=512  ,shuffle = True,
        num_workers=0, pin_memory=False)
 
     train_loss = []
@@ -76,9 +77,9 @@ def main(resume=False):
     best = False
     # model, optimizer = load_checkpoint("checkpoints/55_checkpoint.pth.tar", model, optimizer)
 
-    for epoch in range(0,100):
+    for epoch in range(0,60):
         adjust_learning_rate(optimizer, epoch)
-
+        np.savetxt("current_epoch.out",[epoch])
         # train for one epoch
         loss_train = train(train_loader, model, criterion, optimizer, epoch)
         train_loss = train_loss + loss_train
@@ -212,55 +213,82 @@ def draw_pose(img, pose):
 
     return img
 
+def test(index):
+    import os
+    joints, keys = read_joints()
+    index = 2098 + 5*17*500
+    joints = joints[index]
+    print(joints.shape)
+    person = keys[index][0]
+    name = keys[index][1]
+    file = '%06d' % int(keys[index][2])
+    depth_main = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+
+    center = get_center(depth_main)
+    depth_main = _crop_image(depth_main, center, is_debug=False)
+    depth_main = torch.tensor(np.asarray(depth_main))
+    depth_main = torch.unsqueeze(depth_main, 0)
+    depth_main = torch.unsqueeze(depth_main, 0)
+    print(depth_main.shape)
+    torch.no_grad()
+    model = REN()
+    optimizer = torch.optim.SGD(model.parameters(), 0.005,
+                                momentum=0.9,
+                                weight_decay=0.0005)
+
+    model, optimizer = load_checkpoint("checkpoint.pth.tar", model, optimizer)
+    model.eval()
+    # depth = torch.from_numpy(depth)
+    # depth = torch.unsqueeze(depth, 0)
+    # M = np.float32([[1,0,-10],[0,1,-10]])
+    # rows,cols = read_depth_from_bin("data/P7/5/000000_depth.bin").shape
+    depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    stime = time.time()
+    results = model(depth_main)
+    print(np.mean(np.abs(results[0].detach().numpy())))
+    etime = time.time()
+    print("Time taken: " + str(etime-stime))
+    print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joints.numpy()))))
+    results = (results[0].detach().numpy()).reshape(21,3)
+    dst = draw_pose(depth, results)
+    res = draw_pose(depth1, joints.reshape(21,3))
+    cv2.imshow('results', dst)
+    cv2.imshow('truth', res)
+    ch = cv2.waitKey(0)
+    if ch == ord('q'):
+        exit(0)
+
+def get_rotated_points(joints, M):
+    for i in range(len(joints)):
+        x = joints[i][0]
+        y = joints[i][1]
+        joints[i][0] = M[0,0]*x+ M[0,1]*y + M[0,2]
+        joints[i][1] = M[1,0]*x + M[1,1]*y + M[1,2]
+    return joints
+
+
 if __name__ == '__main__':
     try:
         main()
     except Exception as e:
         with open("history/error.out",'w') as f:
             f.write(str(e))
-    # import h5py
     # import os
-    # joints = read_joints(persons=[7])[0].numpy()
-    # hf_index = 0
-    # center = get_center(read_depth_from_bin("data/P7/5/000000_depth.bin"))
-    # with h5py.File(os.path.join("data_test","7_0.h5"), 'r') as hf:
-    #     depth_main = torch.tensor(hf['dataset_1'][hf_index:hf_index+1])
-    # depth_main = torch.unsqueeze(depth_main, 0)
-    # # depth = read_depth_from_bin("data/po/5/000001_depth.bin")
-    # # print(depth11.shape)
-    # # center = get_center(depth)
-    # # depth = _crop_image(depth, center, is_debug=False)
-    # torch.no_grad()
-    # model = REN()
-    # optimizer = torch.optim.SGD(model.parameters(), 0.005,
-    #                             momentum=0.9,
-    #                             weight_decay=0.0005)
+    # joints, keys = read_joints()
+    # index = 2008 + 0*17*500
+    # joints = joints[index]
+    # person = keys[index][0]
+    # name = keys[index][1]
+    # file = '%06d' % int(keys[index][2])
+    # depth_main = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     #
-    # model, optimizer = load_checkpoint("checkpoints/55_checkpoint.pth.tar", model, optimizer)
-    # model.eval()
-    # # depth = torch.from_numpy(depth)
-    # # depth = torch.unsqueeze(depth, 0)
-    # print(depth_main.shape)
-    # M = np.float32([[1,0,-10],[0,1,-10]])
-    # rows,cols = read_depth_from_bin("data/P7/5/000000_depth.bin").shape
-    # depth = (cv2.warpAffine(read_depth_from_bin("data/P7/5/000000_depth.bin"),M,(cols,rows)))
-    # depth1 = (cv2.warpAffine(read_depth_from_bin("data/P7/5/000000_depth.bin"),M,(cols,rows)))
-    # stime = time.time()
-    # results = model(depth_main)
-    # etime = time.time()
-    # print("Time taken: " + str(etime-stime))
-    # print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joints))))
-    # results = (results[0].detach().numpy()).reshape(21,3)
-    # # print(results)
-    # # print(joints.reshape(21,3))
-    # # print(depth.shape)
-    # # print(depth1.shape)
-    # # print(type(depth))
-    # # print(type(depth1))
-    # dst = draw_pose(depth, results)
-    # res = draw_pose(depth1, joints.reshape(21,3))
-    # cv2.imshow('results', dst)
-    # cv2.imshow('truth', res)
+    # center = get_center(depth_main)
+    # depth_main = _crop_image(depth_main, center, is_debug=False)
+    #
+    # replicate, joints = data_zoom_chance(depth_main, joints)
+    # # res = draw_pose(replicate, joints.reshape(21,3))
+    # cv2.imshow('truth', replicate)
     # ch = cv2.waitKey(0)
     # if ch == ord('q'):
     #     exit(0)

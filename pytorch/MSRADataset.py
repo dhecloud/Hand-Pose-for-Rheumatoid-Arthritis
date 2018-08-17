@@ -52,16 +52,20 @@ class MSRADataset(Dataset):
             file = '%06d' % int(self.keys[index][2])
             depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
 
-        if self.augment:
-            data,joint = data_augment_chance(depth,joint, p = 0.8)
-            data = (torch.tensor(np.asarray(data))).unsqueeze(0)
-            joint = torch.tensor(joint)
+        center = get_center(depth)
+        depth = _crop_image(depth, center, is_debug=False)
+        assert not np.any(np.isnan(depth))
+        assert ((depth>1).sum() == 0)
+        assert ((depth<-1).sum() == 0)
 
-        else:
-            center = get_center(depth)
-            depth = _crop_image(depth, center, is_debug=False)
-            data = torch.tensor(np.asarray(depth))
-            data = data.unsqueeze(0)
+        if self.augment:
+            depth, joint = data_scale_chance(depth,joint, P=0.8)
+            depth,joint = data_translate_chance(depth,joint, p = 0.8)
+            depth,joint = data_rotate_chance(depth,joint, p = 0.8)
+
+        data = torch.tensor(np.asarray(depth))
+        data = data.unsqueeze(0)
+        joint = torch.tensor(joint)
 
 
         # file_index = np.floor(index/441)
@@ -95,7 +99,6 @@ class MSRADataset(Dataset):
         else:
             file_name = "8_" + str(int(file_index))
         return file_name+".h5"
-
 
 def get_center(img, upper=1000, lower=10):
     centers = np.array([0.0, 0.0, 300.0])
@@ -231,12 +234,7 @@ def read_MSRA_save_h5(persons=[0,1,2,3,4,5,6], augment =False, pickleit=False): 
             h5f.create_dataset('dataset_1', data=depth)
         init = False
 
-def data_augment_chance(depth, joint, p = 0.5):
-    center = get_center(depth)
-    depth = _crop_image(depth, center, is_debug=False)
-    assert not np.any(np.isnan(depth))
-    assert ((depth>1).sum() == 0)
-    assert ((depth<-1).sum() == 0)
+def data_translate_chance(depth, joint, p = 0.5):
     roll = random.uniform(0,1)
     if roll < p:
         rows,cols = depth.shape
@@ -254,7 +252,63 @@ def data_augment_chance(depth, joint, p = 0.5):
 
     return depth, joint
 
+def data_rotate_chance(depth, joint, p = 0.5):
+    roll = random.uniform(0,1)
+    if roll < p:
+        angle = random.randint(-45,45)
+        rows,cols = depth.shape
+        M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
+        joints = get_rotated_points(joint.reshape(21,3), M).reshape(63)
 
+        depth = cv2.warpAffine(depth, M, (cols,rows))
+
+    return depth, joint
+
+def data_scale_chance(depth,joint,p=0.8):
+    roll = random.uniform(0,1)
+    if roll < p:
+        if random.random() >= 0.5:
+            depth, joint = data_zoom_chance(depth,joint)
+        else:
+            depth, joint = data_shrink_chance(depth,joint)
+    return depth,joint
+def data_shrink_chance(depth, joint):
+    scale = [0.75,0.85,0.81,0.96,1]
+    joint = joint.reshape(21,3)
+    scale = scale[random.randint(0,4)]
+    #resize/shrink
+    depth = cv2.resize(depth,None,fx=scale, fy=scale, interpolation = cv2.INTER_AREA)
+    joint[:,:2] = joint.reshape(21,3)[:,:2] * scale
+
+    #pad
+    rows,cols = depth.shape
+    pad_t = pad_b = int((96 - int(rows))/2)
+    pad_l = pad_r = int((96 - int(cols))/2)
+    depth = cv2.copyMakeBorder(depth,pad_t,pad_b,pad_l,pad_r,cv2.BORDER_REPLICATE)
+    assert(depth.shape == (96,96))
+    joint[:,:1] = joint[:,:1] + (pad_l)
+    joint[:,1:2] = joint[:,1:2] + (pad_t)
+    joint = joint.reshape(63)
+    return depth, joint
+
+def data_zoom_chance(depth, joint):
+    scale = [1, 1.04, 1.1, 1.15, 1.25]
+    scale = scale[random.randint(0,4)]
+    joint = joint.reshape(21,3)
+    #resize/shrink
+    depth = cv2.resize(depth,None,fx=scale, fy=scale, interpolation = cv2.INTER_AREA)
+    joint[:,:2] = joint.reshape(21,3)[:,:2] * scale
+
+    #pad
+    rows,cols = depth.shape
+    pad_t = pad_b = int((int(rows -96))/2)
+    pad_l = pad_r = int((int(cols) - 96)/2)
+    depth = depth[pad_t:rows-pad_b, pad_l:cols-pad_r]
+    assert(depth.shape == (96,96))
+    joint[:,:1] = joint[:,:1] - (pad_l)
+    joint[:,1:2] = joint[:,1:2] - (pad_t)
+    joint = joint.reshape(63)
+    return depth, joint
 
 def read_joints(persons=[0,1,2,3,4,5,6,7]):
     joints = []
@@ -328,11 +382,20 @@ def world2pixel(x):
     x[:, 1] = x[:, 1] * fy / x[:, 2] + uy
     return x
 
-# with h5py.File(os.path.join("data_test","7_0.h5"), 'r') as hf:
-#     depth_main = torch.tensor(hf['dataset_1'][0:1])
-# print(depth_main.shape)
-msra = MSRADataset(training=False,augment = True)
-print(msra.__getitem__(4)[0].shape)
+
+def get_rotated_points(joints, M):
+    for i in range(len(joints)):
+        x = joints[i][0]
+        y = joints[i][1]
+        joints[i][0] = M[0,0]*x+ M[0,1]*y + M[0,2]
+        joints[i][1] = M[1,0]*x + M[1,1]*y + M[1,2]
+
+    return joints
+
+# msra = MSRADataset(training=True,augment = True)
+
+# for i in range(1000):
+#     msra.__getitem__(i)[0].shape
 # joints, keys = read_joints()
 # print(len(joints))
 # print((keys[67894]))
