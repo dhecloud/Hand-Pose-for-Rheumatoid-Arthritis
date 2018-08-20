@@ -2,7 +2,6 @@ import cv2
 import warnings
 warnings.simplefilter("ignore")
 from MSRADataset import MSRADataset
-from MSRADataset import read_depth_from_bin, get_center, _crop_image, read_joints, augment_translation, augment_scaling, augment_rotation, data_translate_chance, data_rotate_chance, data_scale_chance, data_shrink_chance
 from REN import REN
 import torch.optim
 import torch.nn as nn
@@ -15,7 +14,7 @@ from sys import setrecursionlimit
 setrecursionlimit(20000)
 import time
 
-print_interval = 50
+print_interval = 500
 OUTFILE = "results"
 
 def adjust_learning_rate(optimizer, epoch):
@@ -28,7 +27,7 @@ def adjust_learning_rate(optimizer, epoch):
 
 def main(resume=False):
     model = REN()
-    model.double()
+    model.float()
     model.cuda()
     cudnn.benchmark = True
     criterion = nn.SmoothL1Loss().cuda()
@@ -64,7 +63,7 @@ def main(resume=False):
     best = False
     # model, optimizer = load_checkpoint("checkpoints/55_checkpoint.pth.tar", model, optimizer)
 
-    for epoch in range(0,40):
+    for epoch in range(0,80):
         with open("sentinel.txt", "r") as f:
             sentinel = eval(f.readline())
 
@@ -114,9 +113,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
         stime = time.time()
         # measure data loading time
 
-        target = target.double()
+        target = target.float()
         target = target.cuda(non_blocking=False)
-        input = input.double()
+        input = input.float()
         input = input.cuda()
         # compute output
         output = model(input)

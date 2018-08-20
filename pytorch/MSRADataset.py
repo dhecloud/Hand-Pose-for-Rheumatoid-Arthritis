@@ -16,10 +16,10 @@ class MSRADataset(Dataset):
         self.training = training
         self.augment = augment
         if self.training:
-            self.joints, self.keys = read_joints()
+            self.joints, self.keys = read_joints(poses=["5"])
             self.length = len(self.joints)
         else:
-            self.joints,self.keys = read_joints([8])
+            self.joints,self.keys = read_joints([8],poses=["5"])
             self.length = len(self.joints)
 
     def __len__(self):
@@ -28,17 +28,10 @@ class MSRADataset(Dataset):
     def __getitem__(self, index):
         joint = self.joints[index]
 
-        if self.training:
-            person = self.keys[index][0]
-            name = self.keys[index][1]
-            file = '%06d' % int(self.keys[index][2])
-            depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-
-        else:
-            person = self.keys[index][0]
-            name = self.keys[index][1]
-            file = '%06d' % int(self.keys[index][2])
-            depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+        person = self.keys[index][0]
+        name = self.keys[index][1]
+        file = '%06d' % int(self.keys[index][2])
+        depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
 
         center = get_center(depth)
         depth = _crop_image(depth, center, is_debug=False)
