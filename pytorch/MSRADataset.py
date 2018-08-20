@@ -12,11 +12,7 @@ import random
 
 class MSRADataset(Dataset):
     def __init__(self, training=True, augment = False):
-        # transforms.RandomAffine(degrees = 0,translate=(-10,10))
-        # self.transforms = transforms.Compose([
-        #      transforms.RandomRotation(90),
-        #      transforms.RandomHorizontalFlip()
-        #   ])
+
         self.training = training
         self.augment = augment
         if self.training:
@@ -37,15 +33,7 @@ class MSRADataset(Dataset):
             name = self.keys[index][1]
             file = '%06d' % int(self.keys[index][2])
             depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-            # if index <= 1998:
-            #     person = int(np.floor(index/500))
-            #     name = index % 500
-            #     name = '%06d' % name
-            # else:
-            #     person = int(np.floor((index+1)/500))
-            #     name = (index - 499) % 500
-            #     name = '%06d' % name
-            # depth = read_depth_from_bin("data/P"+str(person)+"/5/"+str(name)+"_depth.bin")
+
         else:
             person = self.keys[index][0]
             name = self.keys[index][1]
@@ -59,46 +47,15 @@ class MSRADataset(Dataset):
         assert ((depth<-1).sum() == 0)
 
         if self.augment:
-            depth, joint = data_scale_chance(depth,joint, P=0.8)
-            depth,joint = data_translate_chance(depth,joint, p = 0.8)
-            depth,joint = data_rotate_chance(depth,joint, p = 0.8)
+            depth, joint = data_scale_chance(depth,joint, p=0.6)
+            depth,joint = data_translate_chance(depth,joint, p = 0.6)
+            depth,joint = data_rotate_chance(depth,joint, p = 0.6)
 
         data = torch.tensor(np.asarray(depth))
         data = data.unsqueeze(0)
         joint = torch.tensor(joint)
 
-
-        # file_index = np.floor(index/441)
-        # file_name = self._get_file_name(file_index)
-        # hf_index = index % 441
-        # with h5py.File(os.path.join("data_test",file_name), 'r') as hf:
-        #     data = torch.tensor(hf['dataset_1'][hf_index:hf_index+1])
-
         return data, joint
-
-    def _get_file_name(self,file_index):
-        assert(file_index>= 0)
-        assert(file_index <3999)
-        if self.training:
-            if file_index <= 499:
-                file_name = "0_" + str(int(file_index))
-            elif file_index <= 999:
-                file_name = "1_" + str(int(file_index-500))
-            elif file_index <= 1499:
-                file_name = "2_" + str(int(file_index-1000))
-            elif file_index <= 1998:
-                file_name = "3_" + str(int(file_index-1500))
-            elif file_index <= 2498:
-                file_name = "4_" + str(int(file_index-1999))
-            elif file_index <= 2998:
-                file_name = "5_" + str(int(file_index-2499))
-            elif file_index <= 3498:
-                file_name = "6_" + str(int(file_index-2999))
-            elif file_index <= 3998:
-                file_name = "7_" + str(int(file_index-3499))
-        else:
-            file_name = "8_" + str(int(file_index))
-        return file_name+".h5"
 
 def get_center(img, upper=1000, lower=10):
     centers = np.array([0.0, 0.0, 300.0])
@@ -155,85 +112,6 @@ def read_depth_from_bin(image_name):
     depth[top:bottom, left:right] = np.reshape(data, (bottom-top, right-left))
     return depth
 
-def read_MSRA(persons=[0,1,2,3,4,5,6], augment =False, pickle=False): #list of persons
-    names = ['{:d}'.format(i).zfill(6) for i in range(500)]
-    init = False
-    init2 = False
-    centers = []
-    for person in persons:
-        for name in names:
-            # print(name)
-            if ((person == 3) and (name == "000499")): #missing bin
-                continue
-            depth = read_depth_from_bin("data/P"+str(person)+"/5/"+name+"_depth.bin")
-
-            #get centers
-            center = get_center(depth)
-            centers.append(center)
-
-            #get cube and resize to 96x96
-            depth = _crop_image(depth, center, is_debug=False)
-            #normalize
-            #depth = normalize(depth)
-            assert not np.any(np.isnan(depth))
-            assert ((depth>1).sum() == 0)
-            assert ((depth<-1).sum() == 0)
-            # augment_translate = augment_translation(depth)
-            # augment_rotate = augment_rotation(depth)
-            # augmented = augment_translate + augment_rotate
-            depth = (torch.from_numpy(np.asarray(depth)))
-            # print(depth.shape)
-            depth = torch.unsqueeze(depth, 0)
-            # print(depth.shape)
-            if (not init):
-                tmp = depth
-                init = True
-            else:
-                tmp= torch.cat((tmp,depth),0)
-        if (not init2):
-            depth_images = tmp
-            init2 = True
-        else:
-            depth_images= torch.cat((depth_images,tmp),0)
-        init =False
-    depth_images = torch.unsqueeze(depth_images, 1)
-    if pickle:
-        pickle.dump(depth_images, open(str(persons[0])+'.p', 'wb'))
-    return depth_images
-
-def read_MSRA_save_h5(persons=[0,1,2,3,4,5,6], augment =False, pickleit=False): #list of persons
-    names = ['{:d}'.format(i).zfill(6) for i in range(500)]
-    init = False
-    init2 = False
-    centers = []
-    for name in names:
-        print(name)
-        if ((int(persons[0]) == 3) and (name == "000499")): #missing bin
-            continue
-        depth = read_depth_from_bin("data/P"+str(persons[0])+"/5/"+name+"_depth.bin")
-
-        #get centers
-        center = get_center(depth)
-        centers.append(center)
-
-        #get cube and resize to 96x96
-        depth = _crop_image(depth, center, is_debug=False)
-        #normalize
-        #depth = normalize(depth)
-        assert not np.any(np.isnan(depth))
-        assert ((depth>1).sum() == 0)
-        assert ((depth<-1).sum() == 0)
-        augment_translate = augment_translation(depth)
-        # augment_rotate = augment_rotation(depth)
-        # augmented = augment_translate + augment_rotate
-        depth = (torch.from_numpy(np.asarray(augment_translate)))
-        print("pickling..")
-        print(depth.shape)
-        depth = depth.numpy()
-        with h5py.File("data_test/"+str(persons[0])+"_"+str(int(name))+'.h5', 'w') as h5f:
-            h5f.create_dataset('dataset_1', data=depth)
-        init = False
-
 def data_translate_chance(depth, joint, p = 0.5):
     roll = random.uniform(0,1)
     if roll < p:
@@ -252,10 +130,19 @@ def data_translate_chance(depth, joint, p = 0.5):
 
     return depth, joint
 
+def get_rotated_points(joints, M):
+    for i in range(len(joints)):
+        x = joints[i][0]
+        y = joints[i][1]
+        joints[i][0] = M[0,0]*x+ M[0,1]*y + M[0,2]
+        joints[i][1] = M[1,0]*x + M[1,1]*y + M[1,2]
+
+    return joints
+
 def data_rotate_chance(depth, joint, p = 0.5):
     roll = random.uniform(0,1)
     if roll < p:
-        angle = random.randint(-45,45)
+        angle = random.randint(-180,180)
         rows,cols = depth.shape
         M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
         joints = get_rotated_points(joint.reshape(21,3), M).reshape(63)
@@ -272,10 +159,12 @@ def data_scale_chance(depth,joint,p=0.8):
         else:
             depth, joint = data_shrink_chance(depth,joint)
     return depth,joint
+
 def data_shrink_chance(depth, joint):
-    scale = [0.75,0.85,0.81,0.96,1]
+    scale = [0.9,0.96,1]
     joint = joint.reshape(21,3)
-    scale = scale[random.randint(0,4)]
+    scale = scale[random.randint(0,2)]
+
     #resize/shrink
     depth = cv2.resize(depth,None,fx=scale, fy=scale, interpolation = cv2.INTER_AREA)
     joint[:,:2] = joint.reshape(21,3)[:,:2] * scale
@@ -292,14 +181,14 @@ def data_shrink_chance(depth, joint):
     return depth, joint
 
 def data_zoom_chance(depth, joint):
-    scale = [1, 1.04, 1.1, 1.15, 1.25]
-    scale = scale[random.randint(0,4)]
+    scale = [1, 1.04, 1.1]
+    scale = scale[random.randint(0,2)]
     joint = joint.reshape(21,3)
     #resize/shrink
     depth = cv2.resize(depth,None,fx=scale, fy=scale, interpolation = cv2.INTER_AREA)
     joint[:,:2] = joint.reshape(21,3)[:,:2] * scale
 
-    #pad
+    #trim
     rows,cols = depth.shape
     pad_t = pad_b = int((int(rows -96))/2)
     pad_l = pad_r = int((int(cols) - 96)/2)
@@ -310,9 +199,8 @@ def data_zoom_chance(depth, joint):
     joint = joint.reshape(63)
     return depth, joint
 
-def read_joints(persons=[0,1,2,3,4,5,6,7]):
+def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
     joints = []
-    poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']
     index = 0
     keys = {}
     for person in persons:
@@ -329,50 +217,8 @@ def read_joints(persons=[0,1,2,3,4,5,6,7]):
                     index +=1
 
     joints = torch.from_numpy(np.asarray(joints))
-    # if augment:
-    #     joints_augmented = []
-    #     joints = joints.numpy()
-    #     joints = joints.reshape(-1,21,3)
-    #     for joint in joints:
-    #         for i in range(-10, 11):    #left/right
-    #             for j in range(-10, 11):    #up/down
-    #                 tmp = joint
-    #                 a = np.array([i, j, 0])
-    #                 b = np.tile(a,(21,1))
-    #                 tmp = tmp + b
-    #                 joints_augmented.append(tmp)
-    #
-    #     joints_augmented = (np.asarray(joints_augmented)).reshape(-1,63)
-    #     return torch.from_numpy(joints_augmented)
 
     return joints, keys
-
-
-def augment_translation(depth):
-    augment_translation = []
-    rows,cols = depth.shape
-    for i in range(-10, 11):
-        for j in range(-10, 11):
-            M = np.float32([[1,0,i],[0,1,j]])
-            augment_translation.append(cv2.warpAffine(depth,M,(cols,rows)))
-    return augment_translation
-
-def augment_scaling(depth):
-    augment_scale = []
-    for i in [0.9, 1.0 ,1.1]:
-        for j in [0.9, 1.0 ,1.1]:
-            resize = cv2.resize(depth, (96,96), fx=i, fy=j)
-            augment_scale.append(resize)
-
-    return augment_scale
-
-def augment_rotation(depth):
-    augment_rotate = []
-    rows,cols = depth.shape
-    for i in range(-180,181):
-        M = cv2.getRotationMatrix2D(((cols-1)/2.0,(rows-1)/2.0),i,1)
-        augment_rotate.append(cv2.warpAffine(depth,M,(cols,rows)))
-    return augment_rotate
 
 def world2pixel(x):
     x[:, 1] = x[:, 1] * -1
@@ -383,19 +229,6 @@ def world2pixel(x):
     return x
 
 
-def get_rotated_points(joints, M):
-    for i in range(len(joints)):
-        x = joints[i][0]
-        y = joints[i][1]
-        joints[i][0] = M[0,0]*x+ M[0,1]*y + M[0,2]
-        joints[i][1] = M[1,0]*x + M[1,1]*y + M[1,2]
-
-    return joints
-
-# msra = MSRADataset(training=True,augment = True)
-
-# for i in range(1000):
-#     msra.__getitem__(i)[0].shape
-# joints, keys = read_joints()
-# print(len(joints))
-# print((keys[67894]))
+msra = MSRADataset(training=True,augment = True)
+for i in range(1000):
+    msra.__getitem__(i)[0].shape

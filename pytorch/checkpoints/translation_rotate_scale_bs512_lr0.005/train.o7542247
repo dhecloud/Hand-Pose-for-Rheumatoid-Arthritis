@@ -1,0 +1,264 @@
+start main
+LR is 0.005 at epoch 0
+epoch: [0][0/133]	Loss 179.7304	Time: 4.78	
+epoch: [0][50/133]	Loss 179.1019	Time: 1.03	
+epoch: [0][100/133]	Loss 179.9672	Time: 1.03	
+Test: [0/17]	Loss 202.6190	
+Test: [5/17]	Loss 203.6409	
+Test: [10/17]	Loss 204.0520	
+Test: [15/17]	Loss 202.1051	
+LR is 0.005 at epoch 1
+epoch: [1][0/133]	Loss 175.8570	Time: 1.04	
+epoch: [1][50/133]	Loss 178.0133	Time: 1.03	
+epoch: [1][100/133]	Loss 175.3638	Time: 1.02	
+Test: [0/17]	Loss 200.9145	
+Test: [5/17]	Loss 203.0457	
+Test: [10/17]	Loss 203.1374	
+Test: [15/17]	Loss 204.1492	
+LR is 0.005 at epoch 2
+epoch: [2][0/133]	Loss 176.3730	Time: 1.03	
+epoch: [2][50/133]	Loss 173.6932	Time: 1.02	
+epoch: [2][100/133]	Loss 177.2716	Time: 1.03	
+Test: [0/17]	Loss 201.7011	
+Test: [5/17]	Loss 201.5457	
+Test: [10/17]	Loss 203.5887	
+Test: [15/17]	Loss 203.0455	
+saving best performing checkpoint on val
+LR is 0.005 at epoch 3
+epoch: [3][0/133]	Loss 174.1861	Time: 1.03	
+epoch: [3][50/133]	Loss 174.4930	Time: 1.03	
+epoch: [3][100/133]	Loss 174.2622	Time: 1.03	
+Test: [0/17]	Loss 202.6242	
+Test: [5/17]	Loss 201.5445	
+Test: [10/17]	Loss 203.9113	
+Test: [15/17]	Loss 202.8351	
+saving best performing checkpoint on val
+LR is 0.005 at epoch 4
+epoch: [4][0/133]	Loss 174.0214	Time: 1.03	
+epoch: [4][50/133]	Loss 174.5372	Time: 1.02	
+epoch: [4][100/133]	Loss 176.9956	Time: 1.03	
+Test: [0/17]	Loss 203.5229	
+Test: [5/17]	Loss 201.5369	
+Test: [10/17]	Loss 201.7713	
+Test: [15/17]	Loss 202.4348	
+LR is 0.005 at epoch 5
+epoch: [5][0/133]	Loss 171.5706	Time: 1.02	
+epoch: [5][50/133]	Loss 173.0977	Time: 1.02	
+epoch: [5][100/133]	Loss 171.3053	Time: 1.03	
+Test: [0/17]	Loss 202.3774	
+Test: [5/17]	Loss 202.1874	
+Test: [10/17]	Loss 201.7096	
+Test: [15/17]	Loss 203.9536	
+saving best performing checkpoint on val
+LR is 0.005 at epoch 6
+epoch: [6][0/133]	Loss 173.9696	Time: 1.03	
+epoch: [6][50/133]	Loss 171.7163	Time: 1.02	
+epoch: [6][100/133]	Loss 172.4828	Time: 1.03	
+Test: [0/17]	Loss 203.1447	
+Test: [5/17]	Loss 201.6514	
+Test: [10/17]	Loss 201.8840	
+Test: [15/17]	Loss 203.3403	
+saving best performing checkpoint on val
+LR is 0.005 at epoch 7
+epoch: [7][0/133]	Loss 170.4360	Time: 1.03	
+epoch: [7][50/133]	Loss 171.2169	Time: 1.02	
+epoch: [7][100/133]	Loss 169.0483	Time: 1.03	
+Test: [0/17]	Loss 133.3861	
+Test: [5/17]	Loss 134.8100	
+Test: [10/17]	Loss 136.2458	
+Test: [15/17]	Loss 134.2382	
+saving best performing checkpoint on val
+LR is 0.005 at epoch 8
+epoch: [8][0/133]	Loss 99.5127	Time: 1.03	
+epoch: [8][50/133]	Loss 78.2404	Time: 1.02	
+epoch: [8][100/133]	Loss 74.0051	Time: 1.03	
+Test: [0/17]	Loss 85.9878	
+Test: [5/17]	Loss 83.8253	
+Test: [10/17]	Loss 85.5529	
+Test: [15/17]	Loss 85.0035	
+saving best performing checkpoint on val
+LR is 0.005 at epoch 9
+epoch: [9][0/133]	Loss 71.7419	Time: 1.03	
+epoch: [9][50/133]	Loss 73.2005	Time: 1.02	
+epoch: [9][100/133]	Loss 71.2277	Time: 1.03	
+Test: [0/17]	Loss 81.5154	
+Test: [5/17]	Loss 80.9636	
+Test: [10/17]	Loss 81.0241	
+Test: [15/17]	Loss 81.0377	
+saving best performing checkpoint on val
+LR is 0.0005 at epoch 10
+epoch: [10][0/133]	Loss 72.9067	Time: 1.02	
+epoch: [10][50/133]	Loss 70.7722	Time: 1.02	
+epoch: [10][100/133]	Loss 69.7723	Time: 1.02	
+Test: [0/17]	Loss 84.6588	
+Test: [5/17]	Loss 84.8202	
+Test: [10/17]	Loss 84.6608	
+Test: [15/17]	Loss 84.8129	
+LR is 0.0005 at epoch 11
+epoch: [11][0/133]	Loss 70.5218	Time: 1.03	
+epoch: [11][50/133]	Loss 68.2638	Time: 1.03	
+epoch: [11][100/133]	Loss 69.6039	Time: 1.03	
+Test: [0/17]	Loss 84.1136	
+Test: [5/17]	Loss 84.4851	
+Test: [10/17]	Loss 84.6051	
+Test: [15/17]	Loss 82.2827	
+LR is 0.0005 at epoch 12
+epoch: [12][0/133]	Loss 69.1137	Time: 1.02	
+epoch: [12][50/133]	Loss 68.8618	Time: 1.02	
+epoch: [12][100/133]	Loss 68.9141	Time: 1.03	
+Test: [0/17]	Loss 83.6852	
+Test: [5/17]	Loss 85.3699	
+Test: [10/17]	Loss 84.0475	
+Test: [15/17]	Loss 84.1069	
+LR is 0.0005 at epoch 13
+epoch: [13][0/133]	Loss 68.1739	Time: 1.03	
+epoch: [13][50/133]	Loss 69.8557	Time: 1.02	
+epoch: [13][100/133]	Loss 69.6493	Time: 1.03	
+Test: [0/17]	Loss 83.7202	
+Test: [5/17]	Loss 83.8096	
+Test: [10/17]	Loss 83.4272	
+Test: [15/17]	Loss 85.0088	
+LR is 0.0005 at epoch 14
+epoch: [14][0/133]	Loss 68.8817	Time: 1.02	
+epoch: [14][50/133]	Loss 64.8584	Time: 1.02	
+epoch: [14][100/133]	Loss 70.3319	Time: 1.03	
+Test: [0/17]	Loss 84.1731	
+Test: [5/17]	Loss 84.5972	
+Test: [10/17]	Loss 84.0162	
+Test: [15/17]	Loss 85.0225	
+LR is 0.0005 at epoch 15
+epoch: [15][0/133]	Loss 68.1380	Time: 1.02	
+epoch: [15][50/133]	Loss 65.4791	Time: 1.03	
+epoch: [15][100/133]	Loss 66.4819	Time: 1.04	
+Test: [0/17]	Loss 86.2475	
+Test: [5/17]	Loss 87.6163	
+Test: [10/17]	Loss 86.6384	
+Test: [15/17]	Loss 84.4314	
+LR is 0.0005 at epoch 16
+epoch: [16][0/133]	Loss 66.6215	Time: 1.03	
+epoch: [16][50/133]	Loss 67.2697	Time: 1.03	
+epoch: [16][100/133]	Loss 67.7385	Time: 1.03	
+Test: [0/17]	Loss 86.4874	
+Test: [5/17]	Loss 85.6580	
+Test: [10/17]	Loss 85.9831	
+Test: [15/17]	Loss 85.3090	
+LR is 0.0005 at epoch 17
+epoch: [17][0/133]	Loss 66.4666	Time: 1.03	
+epoch: [17][50/133]	Loss 67.3269	Time: 1.02	
+epoch: [17][100/133]	Loss 63.5026	Time: 1.03	
+Test: [0/17]	Loss 85.9968	
+Test: [5/17]	Loss 86.0184	
+Test: [10/17]	Loss 86.3333	
+Test: [15/17]	Loss 84.1924	
+LR is 0.0005 at epoch 18
+epoch: [18][0/133]	Loss 66.8019	Time: 1.02	
+epoch: [18][50/133]	Loss 64.6097	Time: 1.02	
+epoch: [18][100/133]	Loss 63.9748	Time: 1.03	
+Test: [0/17]	Loss 85.8461	
+Test: [5/17]	Loss 85.4797	
+Test: [10/17]	Loss 85.0291	
+Test: [15/17]	Loss 85.8762	
+LR is 0.0005 at epoch 19
+epoch: [19][0/133]	Loss 66.9240	Time: 1.03	
+epoch: [19][50/133]	Loss 67.2891	Time: 1.02	
+epoch: [19][100/133]	Loss 65.5213	Time: 1.03	
+Test: [0/17]	Loss 86.2942	
+Test: [5/17]	Loss 85.5615	
+Test: [10/17]	Loss 87.1533	
+Test: [15/17]	Loss 85.8007	
+LR is 5.000000000000001e-05 at epoch 20
+epoch: [20][0/133]	Loss 66.0235	Time: 1.03	
+epoch: [20][50/133]	Loss 65.8656	Time: 1.03	
+epoch: [20][100/133]	Loss 67.0913	Time: 1.03	
+Test: [0/17]	Loss 85.5494	
+Test: [5/17]	Loss 86.8384	
+Test: [10/17]	Loss 85.9251	
+Test: [15/17]	Loss 86.3623	
+LR is 5.000000000000001e-05 at epoch 21
+epoch: [21][0/133]	Loss 64.6604	Time: 1.03	
+epoch: [21][50/133]	Loss 63.0053	Time: 1.03	
+epoch: [21][100/133]	Loss 64.8056	Time: 1.03	
+Test: [0/17]	Loss 84.9859	
+Test: [5/17]	Loss 85.1523	
+Test: [10/17]	Loss 86.6737	
+Test: [15/17]	Loss 87.1507	
+LR is 5.000000000000001e-05 at epoch 22
+epoch: [22][0/133]	Loss 65.2573	Time: 1.03	
+epoch: [22][50/133]	Loss 66.0239	Time: 1.03	
+epoch: [22][100/133]	Loss 62.5468	Time: 1.03	
+Test: [0/17]	Loss 86.1924	
+Test: [5/17]	Loss 86.6609	
+Test: [10/17]	Loss 86.0878	
+Test: [15/17]	Loss 84.5294	
+LR is 5.000000000000001e-05 at epoch 23
+epoch: [23][0/133]	Loss 64.3587	Time: 1.03	
+epoch: [23][50/133]	Loss 61.0926	Time: 1.02	
+epoch: [23][100/133]	Loss 63.9891	Time: 1.04	
+Test: [0/17]	Loss 86.3741	
+Test: [5/17]	Loss 85.2457	
+Test: [10/17]	Loss 86.3755	
+Test: [15/17]	Loss 86.5003	
+LR is 5.000000000000001e-05 at epoch 24
+epoch: [24][0/133]	Loss 64.3730	Time: 1.03	
+epoch: [24][50/133]	Loss 59.7449	Time: 1.02	
+epoch: [24][100/133]	Loss 60.0730	Time: 1.03	
+Test: [0/17]	Loss 86.3507	
+Test: [5/17]	Loss 84.9609	
+Test: [10/17]	Loss 86.8254	
+Test: [15/17]	Loss 85.9817	
+LR is 5.000000000000001e-05 at epoch 25
+epoch: [25][0/133]	Loss 60.3062	Time: 1.03	
+epoch: [25][50/133]	Loss 60.5308	Time: 1.03	
+epoch: [25][100/133]	Loss 60.9047	Time: 1.03	
+Test: [0/17]	Loss 85.7349	
+Test: [5/17]	Loss 85.8291	
+Test: [10/17]	Loss 85.5119	
+Test: [15/17]	Loss 88.1977	
+LR is 5.000000000000001e-05 at epoch 26
+epoch: [26][0/133]	Loss 60.7369	Time: 1.03	
+epoch: [26][50/133]	Loss 60.4041	Time: 1.02	
+epoch: [26][100/133]	Loss 61.7859	Time: 1.03	
+Test: [0/17]	Loss 86.7505	
+Test: [5/17]	Loss 86.3634	
+Test: [10/17]	Loss 86.8617	
+Test: [15/17]	Loss 86.1090	
+LR is 5.000000000000001e-05 at epoch 27
+epoch: [27][0/133]	Loss 60.7694	Time: 1.03	
+epoch: [27][50/133]	Loss 61.5140	Time: 1.03	
+epoch: [27][100/133]	Loss 59.3017	Time: 1.03	
+Test: [0/17]	Loss 86.6826	
+Test: [5/17]	Loss 86.4031	
+Test: [10/17]	Loss 85.5883	
+Test: [15/17]	Loss 86.4897	
+LR is 5.000000000000001e-05 at epoch 28
+epoch: [28][0/133]	Loss 60.9950	Time: 1.02	
+epoch: [28][50/133]	Loss 59.8797	Time: 1.03	
+epoch: [28][100/133]	Loss 60.8017	Time: 1.03	
+Test: [0/17]	Loss 85.5262	
+Test: [5/17]	Loss 86.2088	
+Test: [10/17]	Loss 86.5070	
+Test: [15/17]	Loss 86.1786	
+LR is 5.000000000000001e-05 at epoch 29
+epoch: [29][0/133]	Loss 60.6462	Time: 1.03	
+epoch: [29][50/133]	Loss 58.9059	Time: 1.02	
+epoch: [29][100/133]	Loss 62.1026	Time: 1.03	
+Test: [0/17]	Loss 85.3329	
+Test: [5/17]	Loss 86.3698	
+Test: [10/17]	Loss 85.2844	
+Test: [15/17]	Loss 86.0539	
+======================================================================================
+
+			Resource Usage on 2018-08-19 14:49:16.775168:
+
+	JobId: 7542247.wlm01  
+	Project: personal-andr0063 
+	Exit Status: 0
+	NCPUs Requested: 4				NCPUs Used: 4
+							CPU Time Used: 03:17:36
+	Memory Requested: 4gb 				Memory Used: 1496284kb
+							Vmem Used: 158340540kb
+	Walltime requested: 24:00:00 			Walltime Used: 10:34:15
+	
+	Execution Nodes Used: (gpu1912:ncpus=4:mem=4194304kb:ngpus=1)
+	
+ ======================================================================================

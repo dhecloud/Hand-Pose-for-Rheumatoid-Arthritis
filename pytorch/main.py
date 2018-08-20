@@ -2,7 +2,7 @@ import cv2
 import warnings
 warnings.simplefilter("ignore")
 from MSRADataset import MSRADataset
-from MSRADataset import read_depth_from_bin, get_center, _crop_image, read_joints, augment_translation, augment_scaling, augment_rotation, data_shrink_chance, data_zoom_chance
+from MSRADataset import read_depth_from_bin, get_center, _crop_image, read_joints, augment_translation, augment_scaling, augment_rotation, data_translate_chance, data_rotate_chance, data_scale_chance, data_shrink_chance
 from REN import REN
 import torch.optim
 import torch.nn as nn
@@ -21,20 +21,10 @@ OUTFILE = "results"
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 100 epochs"""
     # lr = 0.00005
-    lr = 0.0005 * (0.1 ** (epoch // 15))
+    lr = 0.005 * (0.1 ** (epoch // 20))
     print("LR is " + str(lr)+ " at epoch "+ str(epoch))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
-
-def adjust_learning_rate_by_iteration(optimizer, iteration):
-    """Sets the learning rate to the initial LR decayed by 10 every 10 epochs"""
-    # if epoch < 11:
-    #     lr = 0.0005 * (0.1 ** (epoch // 10))
-    # else:
-    lr = 0.0005 * (0.1 ** (iteration // 10000))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-
 
 def main(resume=False):
     model = REN()
@@ -49,12 +39,9 @@ def main(resume=False):
                                 momentum=0.9,
                                 weight_decay=0.0005)
 
-
-
-
     if resume:
         val_loader = torch.utils.data.DataLoader(
-           test_dataset, batch_size= 64 ,
+           test_dataset, batch_size= 128 ,
            num_workers=1, pin_memory=False)
 
         model, optimizer = load_checkpoint("16201_checkpoint.pth.tar", model, optimizer)
@@ -62,12 +49,12 @@ def main(resume=False):
         return
 
     train_loader = torch.utils.data.DataLoader(
-       train_dataset, batch_size=512, shuffle = True,
+       train_dataset, batch_size=128, shuffle = True,
        num_workers=0, pin_memory=False)
 
 
     val_loader = torch.utils.data.DataLoader(
-       test_dataset, batch_size=512  ,shuffle = True,
+       test_dataset, batch_size=128  ,shuffle = True,
        num_workers=0, pin_memory=False)
 
     train_loss = []
@@ -77,7 +64,14 @@ def main(resume=False):
     best = False
     # model, optimizer = load_checkpoint("checkpoints/55_checkpoint.pth.tar", model, optimizer)
 
-    for epoch in range(0,60):
+    for epoch in range(0,40):
+        with open("sentinel.txt", "r") as f:
+            sentinel = eval(f.readline())
+
+        if sentinel:
+            pass
+        else:
+            break
         adjust_learning_rate(optimizer, epoch)
         np.savetxt("current_epoch.out",[epoch])
         # train for one epoch
@@ -113,7 +107,6 @@ def main(resume=False):
 
 def train(train_loader, model, criterion, optimizer, epoch):
 
-
     # switch to train mode
     model.train()
     loss_train = []
@@ -135,7 +128,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         loss.backward()
         loss_train.append(loss.data.item())
         optimizer.step()
-        # np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_iteration_train_loss.out", np.asarray(loss_train))
+        np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_iteration_train_loss.out", np.asarray(loss_train))
         # measure elapsed time
         if i % print_interval == 0:
             state = {
@@ -216,7 +209,7 @@ def draw_pose(img, pose):
 def test(index):
     import os
     joints, keys = read_joints()
-    index = 2098 + 5*17*500
+    index = index + 1*17*500
     joints = joints[index]
     print(joints.shape)
     person = keys[index][0]
@@ -236,7 +229,7 @@ def test(index):
                                 momentum=0.9,
                                 weight_decay=0.0005)
 
-    model, optimizer = load_checkpoint("checkpoint.pth.tar", model, optimizer)
+    model, optimizer = load_checkpoint("checkpoints/translation_rotate_scale_60_epoch/checkpoint.pth.tar", model, optimizer)
     model.eval()
     # depth = torch.from_numpy(depth)
     # depth = torch.unsqueeze(depth, 0)
@@ -251,6 +244,8 @@ def test(index):
     print("Time taken: " + str(etime-stime))
     print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joints.numpy()))))
     results = (results[0].detach().numpy()).reshape(21,3)
+    print(results)
+    test = np.ones((240,320))
     dst = draw_pose(depth, results)
     res = draw_pose(depth1, joints.reshape(21,3))
     cv2.imshow('results', dst)
@@ -274,6 +269,7 @@ if __name__ == '__main__':
     except Exception as e:
         with open("history/error.out",'w') as f:
             f.write(str(e))
+    # test(2098)
     # import os
     # joints, keys = read_joints()
     # index = 2008 + 0*17*500
@@ -286,8 +282,10 @@ if __name__ == '__main__':
     # center = get_center(depth_main)
     # depth_main = _crop_image(depth_main, center, is_debug=False)
     #
-    # replicate, joints = data_zoom_chance(depth_main, joints)
-    # # res = draw_pose(replicate, joints.reshape(21,3))
+    # replicate, joints = data_scale_chance(depth_main, joints)
+    # replicate, joints = data_translate_chance(replicate, joints)
+    # replicate, joints = data_rotate_chance(replicate, joints)
+    # replicate = draw_pose(replicate, joints.reshape(21,3))
     # cv2.imshow('truth', replicate)
     # ch = cv2.waitKey(0)
     # if ch == ord('q'):
