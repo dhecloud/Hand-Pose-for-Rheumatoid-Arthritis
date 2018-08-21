@@ -11,15 +11,15 @@ import os
 import random
 
 class MSRADataset(Dataset):
-    def __init__(self, training=True, augment = False):
+    def __init__(self, training=True, augment = False, poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
 
         self.training = training
         self.augment = augment
         if self.training:
-            self.joints, self.keys = read_joints(poses=["5"])
+            self.joints, self.keys = read_joints(poses=poses)
             self.length = len(self.joints)
         else:
-            self.joints,self.keys = read_joints([8],poses=["5"])
+            self.joints,self.keys = read_joints(persons=[8], poses=poses)
             self.length = len(self.joints)
 
     def __len__(self):
@@ -49,6 +49,27 @@ class MSRADataset(Dataset):
         joint = torch.tensor(joint)
 
         return data, joint
+
+def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
+    joints = []
+    index = 0
+    keys = {}
+    for person in persons:
+        for pose in poses:
+            with open("data/P"+str(person)+"/"+str(pose)+"/joint.txt") as f:
+                num_joints = int(f.readline())
+                for i in range(num_joints):
+                    joint = np.fromstring(f.readline(),sep=' ')
+                    joint = joint.reshape(21,3)
+                    joint = world2pixel(joint)
+                    joint = joint.reshape(63)
+                    joints.append(joint)
+                    keys[index]= [person,pose,i]
+                    index +=1
+
+    joints = torch.from_numpy(np.asarray(joints))
+
+    return joints, keys
 
 def get_center(img, upper=1000, lower=10):
     centers = np.array([0.0, 0.0, 300.0])
@@ -192,27 +213,6 @@ def data_zoom_chance(depth, joint):
     joint = joint.reshape(63)
     return depth, joint
 
-def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
-    joints = []
-    index = 0
-    keys = {}
-    for person in persons:
-        for pose in poses:
-            with open("data/P"+str(person)+"/"+str(pose)+"/joint.txt") as f:
-                num_joints = int(f.readline())
-                for i in range(num_joints):
-                    joint = np.fromstring(f.readline(),sep=' ')
-                    joint = joint.reshape(21,3)
-                    joint = world2pixel(joint)
-                    joint = joint.reshape(63)
-                    joints.append(joint)
-                    keys[index]= [person,pose,i]
-                    index +=1
-
-    joints = torch.from_numpy(np.asarray(joints))
-
-    return joints, keys
-
 def world2pixel(x):
     x[:, 1] = x[:, 1] * -1
     x[:, 2] = x[:, 2] * -1
@@ -222,6 +222,6 @@ def world2pixel(x):
     return x
 
 
-msra = MSRADataset(training=True,augment = True)
-for i in range(1000):
-    msra.__getitem__(i)[0].shape
+# msra = MSRADataset(training=True,augment = True)
+# for i in range(1000):
+#     msra.__getitem__(i)[0].shape

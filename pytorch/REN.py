@@ -7,31 +7,30 @@ class RegionEnsemble(nn.Module):
     def __init__(self):
         super(RegionEnsemble, self).__init__()
         self.grids = nn.ModuleList()
-        for i in range(36):
+        for i in range(9):
             self.grids.append(self.make_block())
 
     def make_block(self):
-        return nn.Sequential(nn.Linear(64*2*2, 2048), nn.ReLU(), nn.Dropout(), nn.Linear(2048,2048), nn.ReLU(), nn.Dropout())
+        return nn.Sequential(nn.Linear(64*6*6, 2048), nn.ReLU(), nn.Dropout(), nn.Linear(2048,2048), nn.ReLU(), nn.Dropout())
 
     def forward(self, x):
-        # half1 = x[:, :, :6,:]
-        # half2 = x[:, :, 6:,:]
-        #
-        # quarter1 = half1[:, :, :, :6]   #64x6x6
-        # quarter2 = half1[:, :, :, 6:]
-        # quarter3 = half2[:, :, :, :6]
-        # quarter4 = half2[:, :, :, 6:]
 
+        regions = []
         ensemble = []
-        k = 0
-        for i in range(0,12,2):
-            for j in range(0,12,2):
-                out = x[:, :, i:i+2, j:j+2]
-                out = out.contiguous()
-                out = out.view(out.size(0),-1)
-                out = self.grids[k](out)
-                k +=1
-                ensemble.append(out)
+
+        #4 corners
+        regions += [x[:, :, :6, :6], x[:, :, :6, 6:], x[:, :, 6:, :6], x[:, :, 6:, 6:]]
+        #4 overlapping centers
+        regions += [x[:, :, 3:9, 0:6], x[:, :, 3:9, 6:], x[:, :, :6, 3:9], x[:, :, 6:, 3:9]]
+        # middle center
+        regions += [x[:, :, 3:9, 3:9]]
+
+        for i in range(0,9):
+            out = regions[i]
+            out = out.contiguous()
+            out = out.view(out.size(0),-1)
+            out = self.grids[i](out)
+            ensemble.append(out)
 
         #
         # quarter1 = quarter1.contiguous()
@@ -112,7 +111,7 @@ class REN(nn.Module):
         self.dropout = nn.Dropout()
         self.region_ens = RegionEnsemble()
         #class torch.nn.Linear(in_features, out_features, bias=True)
-        self.fc1 = nn.Linear(36*2048, 63)
+        self.fc1 = nn.Linear(9*2048, 63)
 
     def forward(self, x):
 
@@ -153,9 +152,9 @@ class REN(nn.Module):
 
 # test = torch.tensor(np.random.rand(1,1,96,96))
 # test = test.cuda()
-# test = test.double()
+# test = test.float()
 # model = REN()
-# model = model.double()
+# model = model.float()
 # model = model.cuda()
 # print(model)
 # result = model(test)

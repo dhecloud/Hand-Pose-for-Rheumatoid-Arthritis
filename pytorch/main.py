@@ -10,12 +10,25 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import numpy as np
-from sys import setrecursionlimit
-setrecursionlimit(20000)
 import time
+import argparse
 
-print_interval = 500
 OUTFILE = "results"
+
+
+parser = argparse.ArgumentParser(description='Region Ensemble Network')
+parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
+parser.add_argument('--epoch', type=int, default=80, help='number of epochs')
+parser.add_argument('--test', type=bool, default=False, help='input batch size')
+parser.add_argument('--lr', type=float, default=0.005, help='initial learning rate')
+parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
+parser.add_argument('--weight_decay', type=float, default=0.0005, help='initial learning rate')
+parser.add_argument('--poses', type=str, default=None, nargs='+', help='input batch size')
+parser.add_argument('--checkpoint', type=str, default=None, nargs='+', help='input batch size')
+parser.add_argument('--print_interval', type=int, default=100, help='number of epochs')
+
+
+
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 100 epochs"""
@@ -25,45 +38,49 @@ def adjust_learning_rate(optimizer, epoch):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-def main(resume=False):
+def main(args):
     model = REN()
     model.float()
     model.cuda()
     cudnn.benchmark = True
     criterion = nn.SmoothL1Loss().cuda()
 
-    train_dataset = MSRADataset(training = True, augment =True)
-    test_dataset = MSRADataset(training = False, augment= False)
-    optimizer = torch.optim.SGD(model.parameters(), 0.0005,
-                                momentum=0.9,
-                                weight_decay=0.0005)
+    if args.poses:
+        train_dataset = MSRADataset(training = True, augment =True, poses = args.poses)
+        test_dataset = MSRADataset(training = False, augment= False, poses = args.poses)
+    else:
+        train_dataset = MSRADataset(training = True, augment =True)
+        test_dataset = MSRADataset(training = False, augment= False)
 
-    if resume:
-        val_loader = torch.utils.data.DataLoader(
-           test_dataset, batch_size= 128 ,
-           num_workers=1, pin_memory=False)
+    optimizer = torch.optim.SGD(model.parameters(), args.lr,
+                                momentum=args.momentum,
+                                weight_decay=args.weight_decay)
 
-        model, optimizer = load_checkpoint("16201_checkpoint.pth.tar", model, optimizer)
-        validate(val_loader, model, criterion)
-        return
 
     train_loader = torch.utils.data.DataLoader(
-       train_dataset, batch_size=128, shuffle = True,
+       train_dataset, batch_size=args.batchSize, shuffle = True,
        num_workers=0, pin_memory=False)
 
+    print("hi")
 
     val_loader = torch.utils.data.DataLoader(
-       test_dataset, batch_size=128  ,shuffle = True,
+       test_dataset, batch_size=args.batchSize  ,shuffle = True,
        num_workers=0, pin_memory=False)
+
+    current_epoch = 0
+    if args.checkpoint:
+        model, optimizer, current_epoch = load_checkpoint(args.checkpoint, model, optimizer)
+
+    if args.test:
+        validate(val_loader, model, criterion, args)
 
     train_loss = []
     val_loss = []
     val_acc = []
     mean_errors = []
     best = False
-    # model, optimizer = load_checkpoint("checkpoints/55_checkpoint.pth.tar", model, optimizer)
 
-    for epoch in range(0,80):
+    for epoch in range(current_epoch, args.epoch):
         with open("sentinel.txt", "r") as f:
             sentinel = eval(f.readline())
 
@@ -74,15 +91,15 @@ def main(resume=False):
         adjust_learning_rate(optimizer, epoch)
         np.savetxt("current_epoch.out",[epoch])
         # train for one epoch
-        loss_train = train(train_loader, model, criterion, optimizer, epoch)
+        loss_train = train(train_loader, model, criterion, optimizer, epoch, args)
         train_loss = train_loss + loss_train
         # evaluate on validation set
-        loss_val, mean_error = validate(val_loader, model, criterion)
+        loss_val, mean_error = validate(val_loader, model, criterion ,args)
         #val_loss = val_loss + loss_val
         mean_errors += mean_error
         #print(mean_errors)
         state = {
-            'epoch': epoch + 1,
+            'epoch': epoch,
             'arch': "REN",
             'state_dict': model.state_dict(),
             'optimizer' : optimizer.state_dict(),
@@ -104,7 +121,7 @@ def main(resume=False):
 
 
 
-def train(train_loader, model, criterion, optimizer, epoch):
+def train(train_loader, model, criterion, optimizer, epoch,args):
 
     # switch to train mode
     model.train()
@@ -129,14 +146,14 @@ def train(train_loader, model, criterion, optimizer, epoch):
         optimizer.step()
         np.savetxt("history/"+ OUTFILE.replace(".csv", "") + "_iteration_train_loss.out", np.asarray(loss_train))
         # measure elapsed time
-        if i % print_interval == 0:
-            state = {
-                'iteration': i+1,
-                'arch': "REN",
-                'state_dict': model.state_dict(),
-                'optimizer' : optimizer.state_dict(),
-            }
-            save_checkpoint(state, False, filename='checkpoints/' + str(i+1) + "_checkpoint.pth.tar")
+        if i % args.print_interval == 0:
+            # state = {
+            #     'iteration': i+1,
+            #     'arch': "REN",
+            #     'state_dict': model.state_dict(),
+            #     'optimizer' : optimizer.state_dict(),
+            # }
+            # save_checkpoint(state, False, filename='checkpoints/' + str(i+1) + "_checkpoint.pth.tar")
             TT = time.time() -stime
             print('epoch: [{0}][{1}/{2}]\t'
                   'Loss {loss:.4f}\t'
@@ -147,7 +164,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
 
 
-def validate(val_loader, model, criterion):
+def validate(val_loader, model, criterion, args):
 
     # switch to evaluate mode
     model.eval()
@@ -158,16 +175,16 @@ def validate(val_loader, model, criterion):
 
         for i, (input, target) in enumerate(val_loader):
 
-            target = target.double()
+            target = target.float()
             target = target.cuda(non_blocking=False)
             # compute output
-            input = input.double()
+            input = input.float()
             input = input.cuda()
             output = model(input)
             errors.append(compute_distance_error(output, target).item())
             loss = criterion(output, target)
 
-            if i % 5 == 0:
+            if i % args.print_interval == 0:
                 print('Test: [{0}/{1}]\t'
                       'Loss {loss:.4f}\t'.format(
                        i, len(val_loader), loss=loss))
@@ -185,8 +202,9 @@ def load_checkpoint(path,model, optimizer):
     checkpoint = torch.load(path)
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
+    epoch  = checkpoint['epoch']
 
-    return model, optimizer
+    return model, optimizer, epoch
 
 def compute_distance_error(output, target):
 
@@ -264,10 +282,12 @@ def get_rotated_points(joints, M):
 
 if __name__ == '__main__':
     try:
-        main()
+        args = parser.parse_args()
+        main(args)
     except Exception as e:
-        with open("history/error.out",'w') as f:
+        with open("error.out",'w') as f:
             f.write(str(e))
+            
     # test(2098)
     # import os
     # joints, keys = read_joints()
