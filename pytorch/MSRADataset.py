@@ -11,12 +11,17 @@ import os
 import random
 
 class MSRADataset(Dataset):
-    def __init__(self, training=True, augment = False, poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
+    def __init__(self ,args, training=True, augment = False,persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
 
         self.training = training
         self.augment = augment
+        self.p = args.augment_probability
+        if args.poses:
+            poses = args.poses
+        if args.persons:
+            persons = args.persons
         if self.training:
-            self.joints, self.keys = read_joints(poses=poses)
+            self.joints, self.keys = read_joints(persons=persons,poses=poses)
             self.length = len(self.joints)
         else:
             self.joints,self.keys = read_joints(persons=[8], poses=poses)
@@ -40,9 +45,9 @@ class MSRADataset(Dataset):
         assert ((depth<-1).sum() == 0)
 
         if self.augment:
-            depth, joint = data_scale_chance(depth,joint, p=0.6)
-            depth,joint = data_translate_chance(depth,joint, p = 0.6)
-            depth,joint = data_rotate_chance(depth,joint, p = 0.6)
+            depth, joint = data_scale_chance(depth,joint, p=self.p)
+            depth,joint = data_translate_chance(depth,joint, p = self.p)
+            depth,joint = data_rotate_chance(depth,joint, p = self.p)
 
         data = torch.tensor(np.asarray(depth))
         data = data.unsqueeze(0)
