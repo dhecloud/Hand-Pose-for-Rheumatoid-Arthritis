@@ -13,7 +13,7 @@ import numpy as np
 import time
 import argparse
 import datetime
-import os
+import os, sys
 # import matplotlib.pyplot as plt
 
 OUTFILE = "results"
@@ -117,7 +117,7 @@ def main(args):
     val_acc = []
     mean_errors = []
     best = False
-    low = 99999
+
     print_options(args)
     expr_dir = os.path.join(args.save_dir, args.name)
     for epoch in range(current_epoch, args.epoch):
@@ -145,6 +145,9 @@ def main(args):
             'state_dict': model.state_dict(),
             'optimizer' : optimizer.state_dict(),
         }
+
+        if not os.path.isfile(os.path.join(expr_dir, 'model_best.pth.tar')):
+            save_checkpoint(state, True, args)
 
         if (args.validate) and (epoch > 1) :
             best = (loss_val < min(val_loss[:len(val_loss)-1]))
@@ -215,6 +218,7 @@ def validate(val_loader, model, criterion, args):
     errors = []
     with torch.no_grad():
 
+        expr_dir = os.path.join(args.save_dir, args.name)
         for i, (input, target) in enumerate(val_loader):
 
             target = target.float()
@@ -231,6 +235,7 @@ def validate(val_loader, model, criterion, args):
                       'Loss {loss:.4f}\t'.format(
                        i, len(val_loader), loss=loss))
             loss_val.append(loss.data.item())
+            np.savetxt(os.path.join(expr_dir, "_iteration_val_loss.out"), np.asarray(loss_val), fmt='%f')
 
 
     return [np.mean(loss_val)] , [np.mean(errors)]
@@ -268,59 +273,49 @@ def draw_pose(img, pose):
 
 def test(index, person):
     import os
-    joints, keys = read_joints()
-    index = index + person*17*500
-    joints = joints[index]
-    # print(joints.shape)
-    person = keys[index][0]
-    name = keys[index][1]
-    file = '%06d' % int(keys[index][2])
-    depth_main = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-
-    center = get_center(depth_main)
-    joints = joints.numpy()
-    joints = _normalize_joints(joints.reshape(21,3), center).reshape(63)
-    depth_main = _crop_image(depth_main, center, is_debug=False)
-    depth = depth_main
-    depth1 = depth_main
-    # np.set_printoptions(threshold=np.nan)
-    # depth_main, joints = data_translate_chance(depth_main,joints.reshape(21,3), p=1)
-    # depth_main, joints = data_rotate_chance(depth_main,joints.reshape(21,3), p=1)
-    # depth_main, joints = data_scale_chance(depth_main,joints.reshape(21,3), p=1)
-    depth_main = torch.tensor(np.asarray(depth_main))
-    depth_main = torch.unsqueeze(depth_main, 0)
-    depth_main = torch.unsqueeze(depth_main, 0)
-    # print(depth_main.shape)
-    # torch.no_grad()
+    np.set_printoptions(threshold=np.nan)
+    np.set_printoptions(suppress=True)
+    args = parser.parse_args()
+    if not args.name:
+        now = datetime.datetime.now()
+        args.name = now.strftime("%Y-%m-%d-%H-%M")
+    args.augment = not args.no_augment
+    args.validate = not args.no_validate
+    train_dataset = MSRADataset(training = True, augment = False, args = args)
+    depth, joint, center = train_dataset.__getitem__(5)
+    # print(depth.numpy())
+    # print(joint.numpy().reshape(21,3))
+    torch.no_grad()
     model = REN()
     optimizer = torch.optim.SGD(model.parameters(), 0.005,
                                 momentum=0.9,
                                 weight_decay=0.0005)
-
+    #
     model, optimizer, _ = load_checkpoint("checkpoint.pth.tar", model, optimizer)
     model.eval()
-    # M = np.float32([[1,0,-10],[0,1,-10]])
-    # rows,cols = read_depth_from_bin("data/P7/5/000000_depth.bin").shape
-    depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-    depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    name = 5
+    person = 0
+    file = "000005"
     stime = time.time()
-    results = model(depth_main)
-    print('truth', joints)
-    print("results", results)
+    depth = depth.unsqueeze(0)
+    results = model(depth)
+    # print('truth', joint)
+    # print("results", results)
     etime = time.time()
     print("Time taken: " + str(etime-stime))
-    print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joints.reshape(63)))))
+    # print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joint.reshape(63)))))
     results = (results[0].detach().numpy()).reshape(21,3)
-    joints = _unnormalize_joints(joints,center)
     results  = _unnormalize_joints(results,center)
-    # print(results)
-    # test = np.ones((240,320))
-    dst = draw_pose(depth, results)
-    res = draw_pose(depth1, joints.reshape(21,3))
-    # res = (res + 1) / 2;
-    # res = cv2.resize(res, (240, 320))
-    cv2.imshow('results', dst)
-    cv2.imshow('truth', res)
+    joint  = _unnormalize_joints(joint,center)
+    print(results)
+    print(joint)
+    depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    test = np.ones((240,320))
+    dst = draw_pose(depth, joint.reshape(21,3))
+    res = draw_pose(test, results.reshape(21,3))
+    cv2.imshow('truth', dst)
+    cv2.imshow('results', res)
     ch = cv2.waitKey(0)
     if ch == ord('q'):
         exit(0)
@@ -340,18 +335,13 @@ def save_plt(array, name):
     plt.savefig(name+'.png')
 
 if __name__ == '__main__':
-    try:
-        args = parser.parse_args()
-        if not args.name:
-            now = datetime.datetime.now()
-            args.name = now.strftime("%Y-%m-%d-%H-%M")
-        main(args)
-    except Exception as e:
-        with open("error.out",'w') as f:
-            f.write(str(e))
+    # args = parser.parse_args()
+    # if not args.name:
+    #     now = datetime.datetime.now()
+    #     args.name = now.strftime("%Y-%m-%d-%H-%M")
+    # main(args)
 
-    # for i in range(7):
-    # test(2000,0)
+    test(2000,0)
     # import os
     # joints, keys = read_joints()
     # index = 2008 + 0*17*500

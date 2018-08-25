@@ -23,6 +23,7 @@ class MSRADataset(Dataset):
         if self.training:
             self.joints, self.keys = read_joints(persons=persons,poses=poses)
             self.length = len(self.joints)
+
         else:
             self.joints,self.keys = read_joints(persons=[8], poses=poses)
             self.length = len(self.joints)
@@ -35,25 +36,39 @@ class MSRADataset(Dataset):
         person = self.keys[index][0]
         name = self.keys[index][1]
         file = '%06d' % int(self.keys[index][2])
+        print(person, name, file)
         depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-
         center = get_center(depth)
+        # print(center)
         depth = _crop_image(depth, center, is_debug=False)
+        # print(joint)
         joint = _normalize_joints(joint.reshape(21,3), center).reshape(63)
-        assert not np.any(np.isnan(depth))
-        assert ((depth>1).sum() == 0)
-        assert ((depth<-1).sum() == 0)
-
         if self.augment:
             depth, joint = data_scale_chance(depth,joint, p=self.p)
             depth,joint = data_translate_chance(depth,joint, p = self.p)
             depth,joint = data_rotate_chance(depth,joint, p = self.p)
 
+        joint.reshape(21,3)[:,2::3] -= center[2]
+        joint.reshape(63)
+        joint /= 150
+
+        assert not np.any(np.isnan(depth))
+        assert ((depth>1).sum() == 0)
+        assert ((depth<-1).sum() == 0)
+        # print(index)
+        # print(person)
+        # print(name)
+        # print(file)
+        # print(joint.reshape(21,3))
+        # assert not np.any(np.isnan(joint))
+        # assert ((joint>1).sum() == 0)
+        # assert ((joint<-1).sum() == 0)
+
         data = torch.tensor(np.asarray(depth))
         data = data.unsqueeze(0)
         joint = torch.tensor(joint)
 
-        return data, joint
+        return data, joint, center
 
 def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
     joints = []
@@ -137,10 +152,8 @@ def _normalize_joints(joints, center, is_debug=False):
     trans = cv2.getAffineTransform(np.array(src, dtype=np.float32),
             np.array(dst, dtype=np.float32))
     joints = get_rotated_points(joints.reshape(21,3),trans)
-    joints[:,2::3] -= center[2]
-    joints /= 150
     return joints
-    
+
 def _unnormalize_joints(joints, center):
     _fx, _fy, _ux, _uy = 241.42, 241.42, 160, 120
     _cube_size = 150
@@ -175,7 +188,7 @@ def data_translate_chance(depth, joint, p = 0.5):
         i = random.randint(-10,10)
         j = random.randint(-10,10)
         M = np.float32([[1,0,i],[0,1,j]])
-        depth = cv2.warpAffine(depth,M,(cols,rows))
+        depth = cv2.warpAffine(depth,M,(cols,rows),borderValue=-1)
 
         joint = joint.numpy().reshape(21,3)
         tmp = joint
@@ -203,7 +216,7 @@ def data_rotate_chance(depth, joint, p = 0.5):
         M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
         joints = get_rotated_points(joint.reshape(21,3), M).reshape(63)
 
-        depth = cv2.warpAffine(depth, M, (cols,rows))
+        depth = cv2.warpAffine(depth, M, (cols,rows),borderValue=-1)
 
     return depth, joint
 
