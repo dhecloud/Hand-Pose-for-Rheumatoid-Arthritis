@@ -32,7 +32,6 @@ class MSRADataset(Dataset):
 
     def __getitem__(self, index):
         joint = self.joints[index]
-
         person = self.keys[index][0]
         name = self.keys[index][1]
         file = '%06d' % int(self.keys[index][2])
@@ -40,6 +39,7 @@ class MSRADataset(Dataset):
 
         center = get_center(depth)
         depth = _crop_image(depth, center, is_debug=False)
+        joint = _normalize_joints(joint.reshape(21,3), center).reshape(63)
         assert not np.any(np.isnan(depth))
         assert ((depth>1).sum() == 0)
         assert ((depth<-1).sum() == 0)
@@ -101,10 +101,13 @@ def _crop_image(img, center, is_debug=False):
     xend = center[0] + _cube_size / center[2] * _fx
     ystart = center[1] - _cube_size / center[2] * _fy
     yend = center[1] + _cube_size / center[2] * _fy
+    # print(xstart, xend, ystart, yend)
     src = [(xstart, ystart), (xstart, yend), (xend, ystart)]
     dst = [(0, 0), (0, _input_size - 1), (_input_size - 1, 0)]
     trans = cv2.getAffineTransform(np.array(src, dtype=np.float32),
             np.array(dst, dtype=np.float32))
+    # print(trans.shape)
+    # print(img.shape)
     res_img = cv2.warpAffine(img, trans, (_input_size, _input_size), None,
             cv2.INTER_LINEAR, cv2.BORDER_CONSTANT, center[2] + _cube_size)
     res_img -= center[2]
@@ -120,6 +123,40 @@ def _crop_image(img, center, is_debug=False):
         if ch == ord('q'):
             exit(0)
     return res_img
+
+def _normalize_joints(joints, center, is_debug=False):
+    _fx, _fy, _ux, _uy = 241.42, 241.42, 160, 120
+    _cube_size = 150
+    _input_size = 96
+    xstart = center[0] - _cube_size / center[2] * _fx
+    xend = center[0] + _cube_size / center[2] * _fx
+    ystart = center[1] - _cube_size / center[2] * _fy
+    yend = center[1] + _cube_size / center[2] * _fy
+    src = [(xstart, ystart), (xstart, yend), (xend, ystart)]
+    dst = [(0, 0), (0, _input_size - 1), (_input_size - 1, 0)]
+    trans = cv2.getAffineTransform(np.array(src, dtype=np.float32),
+            np.array(dst, dtype=np.float32))
+    joints = get_rotated_points(joints.reshape(21,3),trans)
+    joints[:,2::3] -= center[2]
+    joints /= 150
+    return joints
+    
+def _unnormalize_joints(joints, center):
+    _fx, _fy, _ux, _uy = 241.42, 241.42, 160, 120
+    _cube_size = 150
+    _input_size = 96
+    joints = joints.reshape(21,3)
+    joints *= 150
+    joints[:,2::3] += center[2]
+    xstart = center[0] - _cube_size / center[2] * _fx
+    xend = center[0] + _cube_size / center[2] * _fx
+    ystart = center[1] - _cube_size / center[2] * _fy
+    yend = center[1] + _cube_size / center[2] * _fy
+    src = [(xstart, ystart), (xstart, yend), (xend, ystart)]
+    dst = [(0, 0), (0, _input_size - 1), (_input_size - 1, 0)]
+    trans = cv2.getAffineTransform(np.array(dst, dtype=np.float32), np.array(src, dtype=np.float32))
+    joints = get_rotated_points(joints.reshape(21,3),trans)
+    return joints
 
 def read_depth_from_bin(image_name):
     f = open(image_name, 'rb')
@@ -226,7 +263,21 @@ def world2pixel(x):
     x[:, 1] = x[:, 1] * fy / x[:, 2] + uy
     return x
 
-
-# msra = MSRADataset(training=True,augment = True)
+# index = 2000
+# person = 0
+# joints, keys = read_joints()
+# index = index + person*17*500
+# joints = joints[index]
+# print(joints.shape)
+# person = keys[index][0]
+# name = keys[index][1]
+# file = '%06d' % int(keys[index][2])
+# depth_main = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+#
+# center = get_center(depth_main)
+# depth = _crop_image(depth_main, center, is_debug=False)
+# print(type(joints))
+# print(_normalize_joints(joints.numpy(),center))
+# msra = MSRADataset(args='',training=True,augment = True)
 # for i in range(1000):
-#     msra.__getitem__(i)[0].shape
+# __getitem__(i)[0].shape

@@ -1,7 +1,7 @@
 import cv2
 import warnings
 warnings.simplefilter("ignore")
-from MSRADataset import MSRADataset, read_joints, read_depth_from_bin, get_center, _crop_image
+from MSRADataset import MSRADataset, read_joints, read_depth_from_bin, get_center, _crop_image, _normalize_joints, data_rotate_chance, data_scale_chance, data_translate_chance, _unnormalize_joints
 from REN import REN
 import torch.optim
 import torch.nn as nn
@@ -14,6 +14,7 @@ import time
 import argparse
 import datetime
 import os
+# import matplotlib.pyplot as plt
 
 OUTFILE = "results"
 
@@ -23,6 +24,7 @@ parser.add_argument('--batchSize', type=int, default=128, help='input batch size
 parser.add_argument('--epoch', type=int, default=150, help='number of epochs')
 parser.add_argument('--test', type=bool, default=False, help='test')
 parser.add_argument('--lr', type=float, default=0.005, help='initial learning rate')
+parser.add_argument('--lr_decay', type=int, default=20, help='decay lr by 10 after _ epoches')
 parser.add_argument('--no_augment', action='store_true', help='dont augment data?')
 parser.add_argument('--no_validate', action='store_true', help='dont validate data when training?')
 parser.add_argument('--augment_probability', type=float, default=0.6, help='augment probability')
@@ -69,10 +71,10 @@ def mkdir(path):
         os.makedirs(path)
 
 def adjust_learning_rate(optimizer, epoch, args):
-    """Sets the learning rate to the initial LR decayed by 10 every 100 epochs"""
+    """Sets the learning rate to the initial LR decayed by 10 every args.lr_decay epochs"""
     # lr = 0.00005
-    lr = args.lr * (0.1 ** (epoch // 50))
-    print("LR is " + str(lr)+ " at epoch "+ str(epoch))
+    lr = args.lr * (0.1 ** (epoch // args.lr_decay))
+    # print("LR is " + str(lr)+ " at epoch "+ str(epoch))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -115,8 +117,9 @@ def main(args):
     val_acc = []
     mean_errors = []
     best = False
-
+    low = 99999
     print_options(args)
+    expr_dir = os.path.join(args.save_dir, args.name)
     for epoch in range(current_epoch, args.epoch):
         with open("sentinel.txt", "r") as f:
             sentinel = eval(f.readline())
@@ -126,16 +129,16 @@ def main(args):
         else:
             break
         adjust_learning_rate(optimizer, epoch, args)
-        np.savetxt("current_epoch.out",[epoch], fmt='%f')
+        np.savetxt(os.path.join(expr_dir,"current_epoch.out"),[epoch], fmt='%f')
         # train for one epoch
         loss_train = train(train_loader, model, criterion, optimizer, epoch, args)
         train_loss = train_loss + loss_train
         if args.validate:
             # evaluate on validation set
             loss_val, mean_error = validate(val_loader, model, criterion ,args)
-        #val_loss = val_loss + loss_val
-        mean_errors += mean_error
-        #print(mean_errors)
+            val_loss = val_loss + loss_val
+            mean_errors += mean_error
+            #print(mean_errors)
         state = {
             'epoch': epoch,
             'arch': "REN",
@@ -144,7 +147,7 @@ def main(args):
         }
 
         if (args.validate) and (epoch > 1) :
-            best = (mean_error < min(mean_errors[:len(mean_errors)-1]))
+            best = (loss_val < min(val_loss[:len(val_loss)-1]))
             if best:
                 print("saving best performing checkpoint on val")
                 save_checkpoint(state, True, args)
@@ -154,9 +157,14 @@ def main(args):
 
     expr_dir = os.path.join(args.save_dir, args.name)
     np.savetxt(os.path.join(expr_dir, "train_loss.out"),train_loss, fmt='%f')
+    # save_plt(train_loss, "train_loss")
     np.savetxt(os.path.join(expr_dir, "val_loss.out"),val_loss, fmt='%f')
+    # save_plt(val_loss, "val_loss")
     np.savetxt(os.path.join(expr_dir, "val_acc.out"),val_acc, fmt='%f')
+    # save_plt(val_acc, "val_acc")
     np.savetxt(os.path.join(expr_dir, "mean_errors.out"),mean_errors, fmt='%f')
+    # save_plt(mean_errors, "mean_errors")
+
 
 
 
@@ -263,19 +271,27 @@ def test(index, person):
     joints, keys = read_joints()
     index = index + person*17*500
     joints = joints[index]
-    print(joints.shape)
+    # print(joints.shape)
     person = keys[index][0]
     name = keys[index][1]
     file = '%06d' % int(keys[index][2])
     depth_main = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
 
     center = get_center(depth_main)
+    joints = joints.numpy()
+    joints = _normalize_joints(joints.reshape(21,3), center).reshape(63)
     depth_main = _crop_image(depth_main, center, is_debug=False)
+    depth = depth_main
+    depth1 = depth_main
+    # np.set_printoptions(threshold=np.nan)
+    # depth_main, joints = data_translate_chance(depth_main,joints.reshape(21,3), p=1)
+    # depth_main, joints = data_rotate_chance(depth_main,joints.reshape(21,3), p=1)
+    # depth_main, joints = data_scale_chance(depth_main,joints.reshape(21,3), p=1)
     depth_main = torch.tensor(np.asarray(depth_main))
     depth_main = torch.unsqueeze(depth_main, 0)
     depth_main = torch.unsqueeze(depth_main, 0)
-    print(depth_main.shape)
-    torch.no_grad()
+    # print(depth_main.shape)
+    # torch.no_grad()
     model = REN()
     optimizer = torch.optim.SGD(model.parameters(), 0.005,
                                 momentum=0.9,
@@ -283,23 +299,26 @@ def test(index, person):
 
     model, optimizer, _ = load_checkpoint("checkpoint.pth.tar", model, optimizer)
     model.eval()
-    # depth = torch.from_numpy(depth)
-    # depth = torch.unsqueeze(depth, 0)
     # M = np.float32([[1,0,-10],[0,1,-10]])
     # rows,cols = read_depth_from_bin("data/P7/5/000000_depth.bin").shape
     depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     stime = time.time()
     results = model(depth_main)
-    print(np.mean(np.abs(results[0].detach().numpy())))
+    print('truth', joints)
+    print("results", results)
     etime = time.time()
     print("Time taken: " + str(etime-stime))
-    print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joints.numpy()))))
+    print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joints.reshape(63)))))
     results = (results[0].detach().numpy()).reshape(21,3)
-    print(results)
-    test = np.ones((240,320))
+    joints = _unnormalize_joints(joints,center)
+    results  = _unnormalize_joints(results,center)
+    # print(results)
+    # test = np.ones((240,320))
     dst = draw_pose(depth, results)
     res = draw_pose(depth1, joints.reshape(21,3))
+    # res = (res + 1) / 2;
+    # res = cv2.resize(res, (240, 320))
     cv2.imshow('results', dst)
     cv2.imshow('truth', res)
     ch = cv2.waitKey(0)
@@ -314,6 +333,11 @@ def get_rotated_points(joints, M):
         joints[i][1] = M[1,0]*x + M[1,1]*y + M[1,2]
     return joints
 
+def save_plt(array, name):
+    plt.plot(array)
+    plt.xlabel('epoch')
+    plt.ylabel('name')
+    plt.savefig(name+'.png')
 
 if __name__ == '__main__':
     try:
