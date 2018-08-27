@@ -10,7 +10,7 @@ class RegionEnsemble(nn.Module):
         super(RegionEnsemble, self).__init__()
         self.feat_size = feat_size
         self.grids = nn.ModuleList()
-        for i in range(9):
+        for i in range(4):
             self.grids.append(self.make_block(self.feat_size))
 
     def make_block(self, feat_size):
@@ -29,11 +29,11 @@ class RegionEnsemble(nn.Module):
         regions += [x[:, :, :midpoint, :midpoint], x[:, :, :midpoint, midpoint:], x[:, :, midpoint:, :midpoint], x[:, :, midpoint:, midpoint:]]
         #4 overlapping centers
 
-        regions += [x[:, :, quarterpoint1:quarterpoint2, :midpoint], x[:, :, quarterpoint1:quarterpoint2, midpoint:], x[:, :, :midpoint, quarterpoint1:quarterpoint2], x[:, :, midpoint:, quarterpoint1:quarterpoint2]]
-        # middle center
-        regions += [x[:, :, quarterpoint1:quarterpoint2, quarterpoint1:quarterpoint2]]
+        # regions += [x[:, :, quarterpoint1:quarterpoint2, :midpoint], x[:, :, quarterpoint1:quarterpoint2, midpoint:], x[:, :, :midpoint, quarterpoint1:quarterpoint2], x[:, :, midpoint:, quarterpoint1:quarterpoint2]]
+        # # middle center
+        # regions += [x[:, :, quarterpoint1:quarterpoint2, quarterpoint1:quarterpoint2]]
 
-        for i in range(0,9):
+        for i in range(0,4):
             out = regions[i]
             # print(out.shape)
             out = out.contiguous()
@@ -74,6 +74,7 @@ class REN(nn.Module):
         feat = np.floor(((feat - 1-1)/2) +1)
         feat = np.floor(((feat - 1-1)/2) +1)
         #nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
+        self.bn = nn.InstanceNorm2d(1)
         self.conv0 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size = 3, padding=1)
         self.relu0 = nn.ReLU()
         self.conv1 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size = 3, padding=1)
@@ -92,11 +93,12 @@ class REN(nn.Module):
         self.dropout = nn.Dropout()
         self.region_ens = RegionEnsemble(feat_size=feat)
         #class torch.nn.Linear(in_features, out_features, bias=True)
-        self.fc1 = nn.Linear(9*2048, args.num_joints)
+        self.fc1 = nn.Linear(4*2048, args.num_joints)
 
     def forward(self, x):
 
-        out = self.conv0(x)
+        out = self.bn(x)
+        out = self.conv0(out)
         out = self.relu0(out)
 
         out = self.conv1(out)
@@ -130,7 +132,34 @@ class REN(nn.Module):
         return out
 
 
+class Test_Network(nn.Module):
 
+    def __init__(self, args):
+        super(Test_Network, self).__init__()
+        feat = int(np.floor(((args.input_size - 1 -1)/2) +1))
+        #nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
+        self.conv0 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size = 3, padding=1)
+        self.relu0 = nn.ReLU()
+        self.conv1 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size = 3, padding=1)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.relu1 = nn.ReLU()
+        self.fc1 = nn.Linear(16*feat*feat, args.num_joints)
+
+    def forward(self, x):
+
+        out = self.conv0(x)
+        out = self.relu0(out)
+
+        out = self.conv1(out)
+        out = self.maxpool1(out)
+        out = self.relu1(out)
+        print(out.shape)
+        out = out.view(out.size(0),-1)
+
+        out = self.fc1(out)
+        return out
+
+#
 # test = torch.tensor(np.random.rand(1,1,150,150))
 # test = test.cuda()
 # test = test.float()

@@ -89,7 +89,6 @@ def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','
 
     joints = torch.from_numpy(np.asarray(joints))
 
-
     return joints, keys
 
 def get_center(img, upper=1000, lower=10):

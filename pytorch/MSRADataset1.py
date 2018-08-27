@@ -36,7 +36,7 @@ class MSRADataset(Dataset):
 
         depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
 
-        return data, joint
+        return data, joint, center
 
 def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
     joints = []
@@ -56,8 +56,9 @@ def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','
                     index +=1
 
     joints = torch.from_numpy(np.asarray(joints))
-
-
+    print("hi")
+    with open("keys.txt",'w') as f:
+        f.write(str(keys))
     return joints, keys
 
 def get_center(img, upper=1000, lower=10):

@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import time
 
 class Modified_SmoothL1Loss(torch.nn.Module):
 
@@ -9,20 +10,14 @@ class Modified_SmoothL1Loss(torch.nn.Module):
 
     def forward(self,x,y):
         total_loss = 0
-        z = x - y
-        for i in range(z.shape[0]):
-            for j in range(z.shape[1]):
-                total_loss += self._smooth_l1(z[i][j])
+        assert(x.shape == y.shape)
+        z = (x - y).float()
+        mse = (torch.abs(z) < 0.01).float() * z
+        l1 = (torch.abs(z) >= 0.01).float() * z
+        total_loss += torch.sum(self._calculate_MSE(mse))
+        total_loss += torch.sum(self._calculate_L1(l1))
 
         return total_loss/z.shape[0]
-
-    def _smooth_l1(self, z):
-        if torch.abs(z) < 0.01:
-            loss = self._calculate_MSE(z)
-        else:
-            loss = self._calculate_L1(z)
-
-        return loss
 
     def _calculate_MSE(self, z):
         return 0.5 *(torch.pow(z,2))
