@@ -1,32 +1,41 @@
 from torch import nn
 import torch
 import numpy as np
+# from torchviz import make_dot, make_dot_from_trace
 
 class RegionEnsemble(nn.Module):
 
-    def __init__(self):
+    def __init__(self, feat_size=12):
+        assert((feat_size/4).is_integer())
         super(RegionEnsemble, self).__init__()
+        self.feat_size = feat_size
         self.grids = nn.ModuleList()
         for i in range(9):
-            self.grids.append(self.make_block())
+            self.grids.append(self.make_block(self.feat_size))
 
-    def make_block(self):
-        return nn.Sequential(nn.Linear(64*6*6, 2048), nn.ReLU(), nn.Dropout(), nn.Linear(2048,2048), nn.ReLU(), nn.Dropout())
+    def make_block(self, feat_size):
+        size = int(self.feat_size/2)
+        return nn.Sequential(nn.Linear(64*size*size, 2048), nn.ReLU(), nn.Dropout(), nn.Linear(2048,2048), nn.ReLU(), nn.Dropout())
 
     def forward(self, x):
 
+        midpoint = int(self.feat_size/2)
+        quarterpoint1 = int(midpoint/2)
+        quarterpoint2 = int(quarterpoint1 + midpoint)
         regions = []
         ensemble = []
 
         #4 corners
-        regions += [x[:, :, :6, :6], x[:, :, :6, 6:], x[:, :, 6:, :6], x[:, :, 6:, 6:]]
+        regions += [x[:, :, :midpoint, :midpoint], x[:, :, :midpoint, midpoint:], x[:, :, midpoint:, :midpoint], x[:, :, midpoint:, midpoint:]]
         #4 overlapping centers
-        regions += [x[:, :, 3:9, 0:6], x[:, :, 3:9, 6:], x[:, :, :6, 3:9], x[:, :, 6:, 3:9]]
+
+        regions += [x[:, :, quarterpoint1:quarterpoint2, :midpoint], x[:, :, quarterpoint1:quarterpoint2, midpoint:], x[:, :, :midpoint, quarterpoint1:quarterpoint2], x[:, :, midpoint:, quarterpoint1:quarterpoint2]]
         # middle center
-        regions += [x[:, :, 3:9, 3:9]]
+        regions += [x[:, :, quarterpoint1:quarterpoint2, quarterpoint1:quarterpoint2]]
 
         for i in range(0,9):
             out = regions[i]
+            # print(out.shape)
             out = out.contiguous()
             out = out.view(out.size(0),-1)
             out = self.grids[i](out)
@@ -59,8 +68,11 @@ class Residual(nn.Module):
 
 class REN(nn.Module):
 
-    def __init__(self, num_joints=63):
+    def __init__(self, args):
         super(REN, self).__init__()
+        feat = np.floor(((args.input_size - 1 -1)/2) +1)
+        feat = np.floor(((feat - 1-1)/2) +1)
+        feat = np.floor(((feat - 1-1)/2) +1)
         #nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
         self.conv0 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size = 3, padding=1)
         self.relu0 = nn.ReLU()
@@ -78,9 +90,9 @@ class REN(nn.Module):
         self.maxpool3 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.relu5 = nn.ReLU()
         self.dropout = nn.Dropout()
-        self.region_ens = RegionEnsemble()
+        self.region_ens = RegionEnsemble(feat_size=feat)
         #class torch.nn.Linear(in_features, out_features, bias=True)
-        self.fc1 = nn.Linear(9*2048, 63)
+        self.fc1 = nn.Linear(9*2048, args.num_joints)
 
     def forward(self, x):
 
@@ -118,13 +130,18 @@ class REN(nn.Module):
         return out
 
 
-#
-# test = torch.tensor(np.random.rand(1,1,96,96))
+
+# test = torch.tensor(np.random.rand(1,1,150,150))
 # test = test.cuda()
 # test = test.float()
 # model = REN()
-# print(model)
+# # print(model)
 # model = model.float()
 # model = model.cuda()
 # result = model(test)
 # print(result)
+#
+# dot = make_dot(model(test), params=dict(model.named_parameters()))
+# dot.format= 'png'
+#
+# dot.render('model.png')

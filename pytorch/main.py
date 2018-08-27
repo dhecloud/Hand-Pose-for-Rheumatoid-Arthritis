@@ -9,6 +9,7 @@ import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
+from loss import Modified_SmoothL1Loss
 import numpy as np
 import time
 import argparse
@@ -25,6 +26,8 @@ parser.add_argument('--epoch', type=int, default=150, help='number of epochs')
 parser.add_argument('--test', type=bool, default=False, help='test')
 parser.add_argument('--lr', type=float, default=0.005, help='initial learning rate')
 parser.add_argument('--lr_decay', type=int, default=20, help='decay lr by 10 after _ epoches')
+parser.add_argument('--input_size', type=int, default=96, help='decay lr by 10 after _ epoches')
+parser.add_argument('--num_joints', type=int, default=42, help='decay lr by 10 after _ epoches')
 parser.add_argument('--no_augment', action='store_true', help='dont augment data?')
 parser.add_argument('--no_validate', action='store_true', help='dont validate data when training?')
 parser.add_argument('--augment_probability', type=float, default=0.6, help='augment probability')
@@ -32,8 +35,8 @@ parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 parser.add_argument('--weight_decay', type=float, default=0.0005, help='weight_decay')
 parser.add_argument('--poses', type=str, default=None, nargs='+', help='poses to train on')
 parser.add_argument('--persons', type=str, default=None, nargs='+', help='persons to train on')
-parser.add_argument('--checkpoint', type=str, default=None, help='path/to/checkpoint.pth.tar')
-parser.add_argument('--print_interval', type=int, default=100, help='number of epochs')
+parser.add_argument('--checkpoint', type=bool, default=None, help='path/to/checkpoint.pth.tar')
+parser.add_argument('--print_interval', type=int, default=100, help='print interval')
 parser.add_argument('--save_dir', type=str, default="experiments/", help='path/to/save_dir')
 parser.add_argument('--name', type=str, default=None, help='name of the experiment. It decides where to store samples and models. if none, it will be saved as the date and time')
 parser.add_argument('--finetune', action='store_true', help='use a pretrained checkpoint')
@@ -77,13 +80,14 @@ def adjust_learning_rate(optimizer, epoch, args):
     # print("LR is " + str(lr)+ " at epoch "+ str(epoch))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+    return optimizer
 
 def main(args):
-    model = REN()
+    model = REN(args)
     model.float()
     model.cuda()
     cudnn.benchmark = True
-    criterion = nn.SmoothL1Loss().cuda()
+    criterion = Modified_SmoothL1Loss().cuda()
 
     args.augment = not args.no_augment
     args.validate = not args.no_validate
@@ -128,7 +132,7 @@ def main(args):
             pass
         else:
             break
-        adjust_learning_rate(optimizer, epoch, args)
+        optimizer = adjust_learning_rate(optimizer, epoch, args)
         np.savetxt(os.path.join(expr_dir,"current_epoch.out"),[epoch], fmt='%f')
         # train for one epoch
         loss_train = train(train_loader, model, criterion, optimizer, epoch, args)
@@ -179,9 +183,9 @@ def train(train_loader, model, criterion, optimizer, epoch,args):
     loss_train = []
     expr_dir = os.path.join(args.save_dir, args.name)
     for i, (input, target) in enumerate(train_loader):
+
         stime = time.time()
         # measure data loading time
-
         target = target.float()
         target = target.cuda(non_blocking=False)
         input = input.float()
@@ -217,10 +221,8 @@ def validate(val_loader, model, criterion, args):
     loss_val = []
     errors = []
     with torch.no_grad():
-
         expr_dir = os.path.join(args.save_dir, args.name)
         for i, (input, target) in enumerate(val_loader):
-
             target = target.float()
             target = target.cuda(non_blocking=False)
             # compute output
@@ -229,7 +231,6 @@ def validate(val_loader, model, criterion, args):
             output = model(input)
             errors.append(compute_distance_error(output, target).item())
             loss = criterion(output, target)
-
             if i % args.print_interval == 0:
                 print('Test: [{0}/{1}]\t'
                       'Loss {loss:.4f}\t'.format(
@@ -282,20 +283,29 @@ def test(index, person):
     args.augment = not args.no_augment
     args.validate = not args.no_validate
     train_dataset = MSRADataset(training = True, augment = False, args = args)
-    depth, joint, center = train_dataset.__getitem__(5)
+    for i in range(0, 1):
+        depth, joint, center = train_dataset.__getitem__(i)
+    #     print(joint.shape)
+    #     print(depth[0].detach().numpy().shape)
+    #     dst = draw_pose(depth[0].numpy(), joint.numpy().reshape(21,2))
+    #     cv2.imshow('truth', dst)
+    #     ch = cv2.waitKey(0)
+    #     if ch == ord('q'):
+    #         exit(0)
+    # return
     # print(depth.numpy())
     # print(joint.numpy().reshape(21,3))
     torch.no_grad()
-    model = REN()
+    model = REN(args)
     optimizer = torch.optim.SGD(model.parameters(), 0.005,
                                 momentum=0.9,
                                 weight_decay=0.0005)
     #
-    model, optimizer, _ = load_checkpoint("checkpoint.pth.tar", model, optimizer)
+    model, optimizer, _ = load_checkpoint("model_best.pth.tar", model, optimizer)
     model.eval()
     name = 5
     person = 0
-    file = "000005"
+    file = "000000"
     stime = time.time()
     depth = depth.unsqueeze(0)
     results = model(depth)
@@ -304,21 +314,27 @@ def test(index, person):
     etime = time.time()
     print("Time taken: " + str(etime-stime))
     # print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joint.reshape(63)))))
-    results = (results[0].detach().numpy()).reshape(21,3)
-    results  = _unnormalize_joints(results,center)
-    joint  = _unnormalize_joints(joint,center)
+    results = (results[0].detach().numpy()).reshape(21,2)
+    tmp = np.zeros((21,3))
+    for i in range(len(results)):
+        tmp[i,:2] = results[i]
+
+
+    # results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
+    # joint  = _unnormalize_joints(joint,center, input_size=args.input_size)
     print(results)
     print(joint)
-    depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-    depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-    test = np.ones((240,320))
-    dst = draw_pose(depth, joint.reshape(21,3))
-    res = draw_pose(test, results.reshape(21,3))
-    cv2.imshow('truth', dst)
-    cv2.imshow('results', res)
-    ch = cv2.waitKey(0)
-    if ch == ord('q'):
-        exit(0)
+    # depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    # depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    # test = np.ones((240,320))
+    # dst = draw_pose(depth.numpy()[0][0], joint.reshape(21,2))
+    # res = draw_pose(depth.numpy()[0][0], results.reshape(21,3))
+    # print(res.shape)
+    # cv2.imshow('truth', dst)
+    # cv2.imshow('results', res)
+    # ch = cv2.waitKey(0)
+    # if ch == ord('q'):
+    #     exit(0)
 
 def get_rotated_points(joints, M):
     for i in range(len(joints)):

@@ -8,12 +8,12 @@ import os
 import random
 
 class MSRADataset(Dataset):
-    def __init__(self ,args, training=True, augment = False,persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
+    def __init__(self , training=True, augment = False,persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
 
         self.training = training
         self.augment = augment
-        self.p = args.augment_probability
-        self.input_size = args.input_size
+        # self.p = args.augment_probability
+        # self.input_size = args.input_size
         if args.poses:
             poses = args.poses
         if args.persons:
@@ -35,40 +35,8 @@ class MSRADataset(Dataset):
         file = '%06d' % int(self.keys[index][2])
 
         depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-        assert(depth.shape == (240,320))
-        center = get_center(depth)
-        # print(center)
-        depth = _crop_image(depth, center, input_size=self.input_size, is_debug=False)
-        # print(depth)
-        # print(joint)
-        joint = _normalize_joints(joint.reshape(21,3),center, input_size=self.input_size).reshape(63)
-        if self.augment:
-            depth, joint = data_scale_chance(depth,joint, input_size=self.input_size, p=self.p)
-            depth,joint = data_translate_chance(depth,joint, p = self.p)
-            depth,joint = data_rotate_chance(depth,joint, p = self.p)
 
-        # joint.reshape(21,3)[:,2::3] -= center[2]
-        # joint.reshape(63)
-        joint /= 150
-        joint = joint.reshape(21,3)[:,:2]
-        joint = joint.reshape(42)
-        assert not np.any(np.isnan(depth))
-        assert ((depth>1).sum() == 0)
-        assert ((depth<-1).sum() == 0)
-        # print(index)
-        # print(person)
-        # print(name)
-        # print(file)
-        # print(joint.reshape(21,3))
-        # assert not np.any(np.isnan(joint))
-        # assert ((joint>1).sum() == 0)
-        # assert ((joint<-1).sum() == 0)
-
-        data = torch.tensor(np.asarray(depth))
-        data = data.unsqueeze(0)
-        joint = torch.tensor(joint)
-
-        return data, joint, center
+        return data, joint
 
 def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
     joints = []
@@ -295,6 +263,6 @@ def world2pixel(x):
 # depth = _crop_image(depth_main, center, is_debug=False)
 # print(type(joints))
 # print(_normalize_joints(joints.numpy(),center))
-# msra = MSRADataset(args='',training=True,augment = True)
-# for i in range(1000):
-# __getitem__(i)[0].shape
+msra = MSRADataset(),training=True,augment = True)
+for i in range(99999):
+    msra.__getitem__(i)
