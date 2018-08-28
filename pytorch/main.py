@@ -2,8 +2,7 @@ import cv2
 import warnings
 warnings.simplefilter("ignore")
 from MSRADataset import MSRADataset, read_joints, read_depth_from_bin, get_center, _crop_image, _normalize_joints, data_rotate_chance, data_scale_chance, data_translate_chance, _unnormalize_joints
-# from REN import REN, Test_Network
-from old_network import REN
+from REN import REN, Test_Network
 import torch.optim
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
@@ -31,7 +30,7 @@ parser.add_argument('--input_size', type=int, default=96, help='decay lr by 10 a
 parser.add_argument('--num_joints', type=int, default=42, help='decay lr by 10 after _ epoches')
 parser.add_argument('--no_augment', action='store_true', help='dont augment data?')
 parser.add_argument('--no_validate', action='store_true', help='dont validate data when training?')
-parser.add_argument('--augment_probability', type=float, default=0.6, help='augment probability')
+parser.add_argument('--augment_probability', type=float, default=1.0, help='augment probability')
 parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 parser.add_argument('--weight_decay', type=float, default=0.0005, help='weight_decay')
 parser.add_argument('--poses', type=str, default=None, nargs='+', help='poses to train on')
@@ -293,18 +292,16 @@ def test(index, person):
         args.name = now.strftime("%Y-%m-%d-%H-%M")
     args.augment = not args.no_augment
     args.validate = not args.no_validate
-    train_dataset = MSRADataset(training = True, augment = False, args = args)
-    for i in range(0, 10, 2):
-        depth, joint, center = train_dataset.__getitem__(i)
-    #     print(joint.shape)
-    #     print(depth[0].detach().numpy().shape)
-    #     print(depth)
-    #     dst = draw_pose(depth[0].numpy(), joint.numpy().reshape(21,2))
-    #     cv2.imshow('truth', dst)
-    #     ch = cv2.waitKey(0)
-    #     if ch == ord('q'):
-    #         exit(0)
-    # return
+    train_dataset = MSRADataset(training = True, augment = True, args = args)
+    for i in range(0, 10):
+        depth, joint, center = train_dataset.__getitem__(0)
+        dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
+        cv2.imshow('truth', dst)
+        ch = cv2.waitKey(0)
+        if ch == ord('q'):
+            exit(0)
+
+    return
     # print(depth.numpy())
     # print(joint.numpy().reshape(21,3))
     torch.no_grad()
@@ -330,25 +327,34 @@ def test(index, person):
     loss = criterion(results.float(), joint.unsqueeze(0).float())
     print(loss)
     results = (results[0].detach().numpy()).reshape(21,2)
-    # tmp = np.zeros((21,3))
-    # for i in range(len(results)):
-    #     tmp[i,:2] = results[i]
+    tmp = np.zeros((21,3))
+    for i in range(len(results)):
+        tmp[i,:2] = results[i]
 
-    # results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
-    # joint  = _unnormalize_joints(joint,center, input_size=args.input_size)
+    joint = joint.reshape(21,2)
+    print(joint.shape)
+    tmp1 = np.zeros((21,3))
+    for i in range(len(joint)):
+        tmp1[i,:2] = joint[i]
+
+    results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
+    joint  = _unnormalize_joints(tmp1,center, input_size=args.input_size)
     print(results)
     print(joint)
-    # depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-    # depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    person = 0
+    name = 5
+    file = '000000'
+    depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     # test = np.ones((240,320))
-    # dst = draw_pose(depth.numpy()[0][0], joint.reshape(21,2))
-    # res = draw_pose(depth.numpy()[0][0], results.reshape(21,3))
-    # print(res.shape)
-    # cv2.imshow('truth', dst)
-    # cv2.imshow('results', res)
-    # ch = cv2.waitKey(0)
-    # if ch == ord('q'):
-    #     exit(0)
+    dst = draw_pose(depth, joint.reshape(21,3))
+    res = draw_pose(depth1, results.reshape(21,3))
+    print(res.shape)
+    cv2.imshow('truth', dst)
+    cv2.imshow('results', res)
+    ch = cv2.waitKey(0)
+    if ch == ord('q'):
+        exit(0)
 
 def get_rotated_points(joints, M):
     for i in range(len(joints)):
@@ -365,10 +371,10 @@ def save_plt(array, name):
     plt.savefig(name+'.png')
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    if not args.name:
-        now = datetime.datetime.now()
-        args.name = now.strftime("%Y-%m-%d-%H-%M")
-    main(args)
+    # args = parser.parse_args()
+    # if not args.name:
+    #     now = datetime.datetime.now()
+    #     args.name = now.strftime("%Y-%m-%d-%H-%M")
+    # main(args)
 
-    # test(2000,0)
+    test(2000,0)

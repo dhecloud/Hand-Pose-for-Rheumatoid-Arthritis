@@ -10,7 +10,7 @@ class RegionEnsemble(nn.Module):
         super(RegionEnsemble, self).__init__()
         self.feat_size = feat_size
         self.grids = nn.ModuleList()
-        for i in range(4):
+        for i in range(9):
             self.grids.append(self.make_block(self.feat_size))
 
     def make_block(self, feat_size):
@@ -26,14 +26,14 @@ class RegionEnsemble(nn.Module):
         ensemble = []
 
         #4 corners
-        regions += [x[:, :, :midpoint, :midpoint], x[:, :, :midpoint, midpoint:], x[:, :, midpoint:, :midpoint], x[:, :, midpoint:, midpoint:]]
-        #4 overlapping centers
+        regions += [x[:, :, :midpoint, :midpoint].clone(), x[:, :, :midpoint, midpoint:].clone(), x[:, :, midpoint:, :midpoint].clone(), x[:, :, midpoint:, midpoint:].clone()]
+        # 4 overlapping centers
 
-        # regions += [x[:, :, quarterpoint1:quarterpoint2, :midpoint], x[:, :, quarterpoint1:quarterpoint2, midpoint:], x[:, :, :midpoint, quarterpoint1:quarterpoint2], x[:, :, midpoint:, quarterpoint1:quarterpoint2]]
-        # # middle center
-        # regions += [x[:, :, quarterpoint1:quarterpoint2, quarterpoint1:quarterpoint2]]
+        regions += [x[:, :, quarterpoint1:quarterpoint2, :midpoint].clone(), x[:, :, quarterpoint1:quarterpoint2, midpoint:].clone(), x[:, :, :midpoint, quarterpoint1:quarterpoint2].clone(), x[:, :, midpoint:, quarterpoint1:quarterpoint2].clone()]
+        # middle center
+        regions += [x[:, :, quarterpoint1:quarterpoint2, quarterpoint1:quarterpoint2].clone()]
 
-        for i in range(0,4):
+        for i in range(0,9):
             out = regions[i]
             # print(out.shape)
             out = out.contiguous()
@@ -93,7 +93,7 @@ class REN(nn.Module):
         self.dropout = nn.Dropout()
         self.region_ens = RegionEnsemble(feat_size=feat)
         #class torch.nn.Linear(in_features, out_features, bias=True)
-        self.fc1 = nn.Linear(4*2048, args.num_joints)
+        self.fc1 = nn.Linear(9*2048, args.num_joints)
 
     def forward(self, x):
 

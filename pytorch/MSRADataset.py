@@ -14,22 +14,26 @@ class MSRADataset(Dataset):
         self.augment = augment
         self.p = args.augment_probability
         self.input_size = args.input_size
+
         if args.poses:
             poses = args.poses
         if args.persons:
             persons = args.persons
         if self.training:
-            self.joints, self.keys = read_joints(persons=persons,poses=poses)
-            self.length = len(self.joints)
+            self.all_joints, self.keys = read_joints(persons=persons,poses=poses)
+            self.length = len(self.all_joints)
         else:
-            self.joints,self.keys = read_joints(persons=[8], poses=poses)
-            self.length = len(self.joints)
+            self.all_joints,self.keys = read_joints(persons=[8], poses=poses)
+            self.length = len(self.all_joints)
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, index):
-        joint = self.joints[index]
+
+        joint = self.all_joints[index].copy()
+
+
         person = self.keys[index][0]
         name = self.keys[index][1]
         file = '%06d' % int(self.keys[index][2])
@@ -37,37 +41,24 @@ class MSRADataset(Dataset):
         depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
         assert(depth.shape == (240,320))
         center = get_center(depth)
-        # print(center)
+
         depth = _crop_image(depth, center, input_size=self.input_size, is_debug=False)
-        # print(depth)
-        # print(joint)
         joint = _normalize_joints(joint.reshape(21,3),center, input_size=self.input_size).reshape(63)
         if self.augment:
             depth, joint = data_scale_chance(depth,joint, input_size=self.input_size, p=self.p)
             depth,joint = data_translate_chance(depth,joint, p = self.p)
             depth,joint = data_rotate_chance(depth,joint, p = self.p)
 
-        # joint.reshape(21,3)[:,2::3] -= center[2]
-        # joint.reshape(63)
+
         joint /= 150
         joint = joint.reshape(21,3)[:,:2]
         joint = joint.reshape(42)
         assert not np.any(np.isnan(depth))
         assert ((depth>1).sum() == 0)
         assert ((depth<-1).sum() == 0)
-        # print(index)
-        # print(person)
-        # print(name)
-        # print(file)
-        # print(joint.reshape(21,3))
-        # assert not np.any(np.isnan(joint))
-        # assert ((joint>1).sum() == 0)
-        # assert ((joint<-1).sum() == 0)
-
         data = torch.tensor(np.asarray(depth))
         data = data.unsqueeze(0)
         joint = torch.tensor(joint)
-
         return data, joint, center
 
 def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
@@ -87,7 +78,7 @@ def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','
                     keys[index]= [person,pose,i]
                     index +=1
 
-    joints = torch.from_numpy(np.asarray(joints))
+    # joints = torch.from_numpy(np.asarray(joints))
 
     return joints, keys
 
@@ -190,7 +181,7 @@ def data_translate_chance(depth, joint, p = 0.5):
         M = np.float32([[1,0,i],[0,1,j]])
         depth = cv2.warpAffine(depth,M,(cols,rows), cv2.BORDER_REPLICATE)
 
-        joint = joint.numpy().reshape(21,3)
+        joint = joint.reshape(21,3)
         tmp = joint
         a = np.array([i, j, 0])
         b = np.tile(a,(21,1))
