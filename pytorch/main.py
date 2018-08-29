@@ -35,7 +35,7 @@ parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 parser.add_argument('--weight_decay', type=float, default=0.0005, help='weight_decay')
 parser.add_argument('--poses', type=str, default=None, nargs='+', help='poses to train on')
 parser.add_argument('--persons', type=str, default=None, nargs='+', help='persons to train on')
-parser.add_argument('--checkpoint', type=bool, default=None, help='path/to/checkpoint.pth.tar')
+parser.add_argument('--checkpoint', type=str, default=None, help='path/to/checkpoint.pth.tar')
 parser.add_argument('--print_interval', type=int, default=100, help='print interval')
 parser.add_argument('--save_dir', type=str, default="experiments/", help='path/to/save_dir')
 parser.add_argument('--name', type=str, default=None, help='name of the experiment. It decides where to store samples and models. if none, it will be saved as the date and time')
@@ -257,7 +257,7 @@ def save_checkpoint(state, is_best, opt, filename='checkpoint.pth.tar'):
     if is_best:
         torch.save(state, os.path.join(expr_dir, 'model_best.pth.tar'))
 
-def load_checkpoint(path,model, optimizer):
+def load_checkpoint(path, model, optimizer):
     checkpoint = torch.load(path)
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
@@ -292,16 +292,16 @@ def test(index, person):
         args.name = now.strftime("%Y-%m-%d-%H-%M")
     args.augment = not args.no_augment
     args.validate = not args.no_validate
-    train_dataset = MSRADataset(training = True, augment = True, args = args)
-    for i in range(0, 10):
-        depth, joint, center = train_dataset.__getitem__(0)
-        dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
-        cv2.imshow('truth', dst)
-        ch = cv2.waitKey(0)
-        if ch == ord('q'):
-            exit(0)
+    train_dataset = MSRADataset(training = True, augment = False, args = args)
+    for i in range(0, 1):
+        depth, joint, center = train_dataset.__getitem__(i)
+        # dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
+        # cv2.imshow('truth', dst)
+        # ch = cv2.waitKey(0)
+        # if ch == ord('q'):
+        #     exit(0)
 
-    return
+    # return
     # print(depth.numpy())
     # print(joint.numpy().reshape(21,3))
     torch.no_grad()
@@ -322,7 +322,6 @@ def test(index, person):
     # print("results", results)
     etime = time.time()
     print("Time taken: " + str(etime-stime))
-    # print("Error: " + str(np.mean(np.abs(results[0].detach().numpy() - joint.reshape(63)))))
     criterion = Modified_SmoothL1Loss()
     loss = criterion(results.float(), joint.unsqueeze(0).float())
     print(loss)
@@ -339,11 +338,11 @@ def test(index, person):
 
     results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
     joint  = _unnormalize_joints(tmp1,center, input_size=args.input_size)
+    print(type(results))
+    print(type(joint))
+    print("Error: " + str(np.mean(np.abs(results - joint))))
     print(results)
     print(joint)
-    person = 0
-    name = 5
-    file = '000000'
     depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     # test = np.ones((240,320))
@@ -371,10 +370,10 @@ def save_plt(array, name):
     plt.savefig(name+'.png')
 
 if __name__ == '__main__':
-    # args = parser.parse_args()
-    # if not args.name:
-    #     now = datetime.datetime.now()
-    #     args.name = now.strftime("%Y-%m-%d-%H-%M")
-    # main(args)
+    args = parser.parse_args()
+    if not args.name:
+        now = datetime.datetime.now()
+        args.name = now.strftime("%Y-%m-%d-%H-%M")
+    main(args)
 
-    test(2000,0)
+    # test(2000,0)
