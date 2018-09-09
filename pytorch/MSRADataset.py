@@ -8,22 +8,23 @@ import os
 import random
 
 class MSRADataset(Dataset):
-    def __init__(self ,args, training=True, augment = False,persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
+    def __init__(self, args, training=True, augment = False):
 
         self.training = training
         self.augment = augment
         self.p = args.augment_probability
         self.input_size = args.input_size
 
-        if args.poses:
-            poses = args.poses
-        if args.persons:
-            persons = args.persons
+        subjs = [0,1,2,3,4,5,6,7,8]
+        poses = args.poses
+        train_persons = args.persons
+        test_persons = list(set(train_persons)^set(subjs))
+
         if self.training:
-            self.all_joints, self.keys = read_joints(persons=persons,poses=poses)
+            self.all_joints, self.keys = read_joints(persons=train_persons,poses=poses)
             self.length = len(self.all_joints)
         else:
-            self.all_joints,self.keys = read_joints(persons=[8], poses=poses)
+            self.all_joints,self.keys = read_joints(persons=test_persons, poses=poses)
             self.length = len(self.all_joints)
 
     def __len__(self):
@@ -59,7 +60,7 @@ class MSRADataset(Dataset):
         data = torch.tensor(np.asarray(depth))
         data = data.unsqueeze(0)
         joint = torch.tensor(joint)
-        return data, joint, center
+        return data, joint
 
 def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
     joints = []
@@ -202,7 +203,7 @@ def get_rotated_points(joints, M):
 def data_rotate_chance(depth, joint, p = 0.5):
     roll = random.uniform(0,1)
     if roll < p:
-        angle = random.randint(-180,180)
+        angle = random.randint(-45,45)
         rows,cols = depth.shape
         M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
         joints = get_rotated_points(joint.reshape(21,3), M).reshape(63)
@@ -270,21 +271,22 @@ def world2pixel(x):
     x[:, 1] = x[:, 1] * fy / x[:, 2] + uy
     return x
 
-# index = 2000
-# person = 0
-# joints, keys = read_joints()
-# index = index + person*17*500
-# joints = joints[index]
-# print(joints.shape)
-# person = keys[index][0]
-# name = keys[index][1]
-# file = '%06d' % int(keys[index][2])
-# depth_main = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-#
-# center = get_center(depth_main)
-# depth = _crop_image(depth_main, center, is_debug=False)
-# print(type(joints))
-# print(_normalize_joints(joints.numpy(),center))
-# msra = MSRADataset(args='',training=True,augment = True)
-# for i in range(1000):
-# __getitem__(i)[0].shape
+if __name__ == '__main__':
+    index = 2000
+    person = 0
+    joints, keys = read_joints()
+    index = index + person*17*500
+    joints = joints[index]
+    print(joints.shape)
+    person = keys[index][0]
+    name = keys[index][1]
+    file = '%06d' % int(keys[index][2])
+    depth_main = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+
+    center = get_center(depth_main)
+    depth = _crop_image(depth_main, center, is_debug=False)
+    print(type(joints))
+    print(_normalize_joints(joints.numpy(),center))
+    msra = MSRADataset(args='',training=True,augment = True)
+    for i in range(1000):
+        msra.__getitem__(i)[0].shape

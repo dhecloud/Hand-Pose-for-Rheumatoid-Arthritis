@@ -22,9 +22,9 @@ OUTFILE = "results"
 
 parser = argparse.ArgumentParser(description='Region Ensemble Network')
 parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
-parser.add_argument('--epoch', type=int, default=150, help='number of epochs')
+parser.add_argument('--epoch', type=int, default=100, help='number of epochs')
 parser.add_argument('--test', type=bool, default=False, help='test')
-parser.add_argument('--lr', type=float, default=0.0005, help='initial learning rate')
+parser.add_argument('--lr', type=float, default=0.005, help='initial learning rate')
 parser.add_argument('--lr_decay', type=int, default=20, help='decay lr by 10 after _ epoches')
 parser.add_argument('--input_size', type=int, default=96, help='decay lr by 10 after _ epoches')
 parser.add_argument('--num_joints', type=int, default=42, help='decay lr by 10 after _ epoches')
@@ -36,7 +36,7 @@ parser.add_argument('--weight_decay', type=float, default=0.0005, help='weight_d
 parser.add_argument('--poses', type=str, default=None, nargs='+', help='poses to train on')
 parser.add_argument('--persons', type=str, default=None, nargs='+', help='persons to train on')
 parser.add_argument('--checkpoint', type=str, default=None, help='path/to/checkpoint.pth.tar')
-parser.add_argument('--print_interval', type=int, default=100, help='print interval')
+parser.add_argument('--print_interval', type=int, default=500, help='print interval')
 parser.add_argument('--save_dir', type=str, default="experiments/", help='path/to/save_dir')
 parser.add_argument('--name', type=str, default=None, help='name of the experiment. It decides where to store samples and models. if none, it will be saved as the date and time')
 parser.add_argument('--finetune', action='store_true', help='use a pretrained checkpoint')
@@ -82,7 +82,22 @@ def adjust_learning_rate(optimizer, epoch, args):
         param_group['lr'] = lr
     return optimizer
 
+def set_default_args(args):
+    if not args.name:
+        now = datetime.datetime.now()
+        args.name = now.strftime("%Y-%m-%d-%H-%M")
+    if not args.poses:
+        args.poses = ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']
+    if not args.persons:
+        args.persons = [0,1,2,3,4,5,6,7]
+
+    args.augment = not args.no_augment
+    args.validate = not args.no_validate
+
+
+
 def main(args):
+    set_default_args(args)
     model = REN(args)
 
     model.float()
@@ -91,8 +106,6 @@ def main(args):
     cudnn.benchmark = True
     criterion = Modified_SmoothL1Loss().cuda()
 
-    args.augment = not args.no_augment
-    args.validate = not args.no_validate
     train_dataset = MSRADataset(training = True, augment = args.augment, args = args)
     test_dataset = MSRADataset(training = False, augment= False, args = args)
 
@@ -292,16 +305,16 @@ def test(index, person):
         args.name = now.strftime("%Y-%m-%d-%H-%M")
     args.augment = not args.no_augment
     args.validate = not args.no_validate
-    train_dataset = MSRADataset(training = True, augment = False, args = args)
-    for i in range(0, 1):
-        depth, joint, center = train_dataset.__getitem__(i)
-        # dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
-        # cv2.imshow('truth', dst)
-        # ch = cv2.waitKey(0)
-        # if ch == ord('q'):
-        #     exit(0)
+    train_dataset = MSRADataset(training = True, augment = True, args = args)
+    for i in range(0, 100):
+        depth, joint, center = train_dataset.__getitem__(0)
+        dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
+        cv2.imshow('truth', dst)
+        ch = cv2.waitKey(0)
+        if ch == ord('q'):
+            exit(0)
 
-    # return
+    return
     # print(depth.numpy())
     # print(joint.numpy().reshape(21,3))
     torch.no_grad()
@@ -310,7 +323,7 @@ def test(index, person):
                                 momentum=0.9,
                                 weight_decay=0.0005)
     #
-    model, optimizer, _ = load_checkpoint("checkpoint.pth.tar", model, optimizer)
+    model, optimizer, _ = load_checkpoint("experiments/all_8ppl_na/checkpoint.pth.tar", model, optimizer)
     model.eval()
     name = 5
     person = 0
@@ -338,11 +351,11 @@ def test(index, person):
 
     results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
     joint  = _unnormalize_joints(tmp1,center, input_size=args.input_size)
-    print(type(results))
-    print(type(joint))
+    # print(type(results))
+    # print(type(joint))
     print("Error: " + str(np.mean(np.abs(results - joint))))
-    print(results)
-    print(joint)
+    # print(results)
+    # print(joint)
     depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     # test = np.ones((240,320))
@@ -371,9 +384,6 @@ def save_plt(array, name):
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    if not args.name:
-        now = datetime.datetime.now()
-        args.name = now.strftime("%Y-%m-%d-%H-%M")
     main(args)
 
     # test(2000,0)

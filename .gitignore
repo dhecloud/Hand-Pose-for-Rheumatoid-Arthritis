@@ -10,6 +10,9 @@
 *.ini
 *.zip
 
+##PBS scripts
+train.o*
+
 # User-specific files
 *.suo
 *.user
