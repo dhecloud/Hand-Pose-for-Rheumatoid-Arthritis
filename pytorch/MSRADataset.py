@@ -60,7 +60,7 @@ class MSRADataset(Dataset):
         data = torch.tensor(np.asarray(depth))
         data = data.unsqueeze(0)
         joint = torch.tensor(joint)
-        return data, joint
+        return data, joint, center
 
 def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
     joints = []

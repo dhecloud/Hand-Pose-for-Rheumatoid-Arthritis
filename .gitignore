@@ -402,3 +402,4 @@ demo-cpp
 .idea
 training
 caffe-pose
+*.pptx

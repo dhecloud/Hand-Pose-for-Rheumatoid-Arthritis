@@ -300,6 +300,7 @@ def test(index, person):
     np.set_printoptions(threshold=np.nan)
     np.set_printoptions(suppress=True)
     args = parser.parse_args()
+    set_default_args(args)
     if not args.name:
         now = datetime.datetime.now()
         args.name = now.strftime("%Y-%m-%d-%H-%M")
@@ -307,8 +308,10 @@ def test(index, person):
     args.validate = not args.no_validate
     train_dataset = MSRADataset(training = True, augment = True, args = args)
     for i in range(0, 100):
-        depth, joint, center = train_dataset.__getitem__(0)
+        print(i)
+        depth, joint, center = train_dataset.__getitem__(62)
         dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
+        # cv2.imwrite(str(i)+'.jpg', dst)
         cv2.imshow('truth', dst)
         ch = cv2.waitKey(0)
         if ch == ord('q'):
@@ -383,7 +386,15 @@ def save_plt(array, name):
     plt.savefig(name+'.png')
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    main(args)
+    # try:
+    #     args = parser.parse_args()
+    #     main(args)
+    # except Exception as e:
+    #    with open('error.out', 'w') as f:
+    #        f.write(str(e))
 
-    # test(2000,0)
+
+
+
+
+    test(2000,0)
