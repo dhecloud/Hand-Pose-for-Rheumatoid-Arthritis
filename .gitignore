@@ -402,4 +402,7 @@ demo-cpp
 .idea
 training
 caffe-pose
+average_MAE_checkpoint
+
+average_MAE_model_best
 *.pptx

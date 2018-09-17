@@ -14,7 +14,7 @@ class MSRADataset(Dataset):
         self.augment = augment
         self.p = args.augment_probability
         self.input_size = args.input_size
-
+        self.centers = []
         subjs = [0,1,2,3,4,5,6,7,8]
         poses = args.poses
         train_persons = args.persons
@@ -42,6 +42,7 @@ class MSRADataset(Dataset):
         depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
         assert(depth.shape == (240,320))
         center = get_center(depth)
+        self.centers.append(center)
 
         depth = _crop_image(depth, center, input_size=self.input_size, is_debug=False)
         joint = _normalize_joints(joint.reshape(21,3),center, input_size=self.input_size).reshape(63)
@@ -60,7 +61,10 @@ class MSRADataset(Dataset):
         data = torch.tensor(np.asarray(depth))
         data = data.unsqueeze(0)
         joint = torch.tensor(joint)
-        return data, joint, center
+        return data, joint
+
+    def get_center(self,index):
+        return self.centers[index]
 
 def read_joints(persons=[0,1,2,3,4,5,6,7], poses= ["1","2","3","4",'5','6','7','8','9','I','IP','L','MP','RP','T','TIP','Y']):
     joints = []

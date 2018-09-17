@@ -23,7 +23,7 @@ OUTFILE = "results"
 parser = argparse.ArgumentParser(description='Region Ensemble Network')
 parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
 parser.add_argument('--epoch', type=int, default=100, help='number of epochs')
-parser.add_argument('--test', type=bool, default=False, help='test')
+parser.add_argument('--test', action='store_true', help='only test without training')
 parser.add_argument('--lr', type=float, default=0.005, help='initial learning rate')
 parser.add_argument('--lr_decay', type=int, default=20, help='decay lr by 10 after _ epoches')
 parser.add_argument('--input_size', type=int, default=96, help='decay lr by 10 after _ epoches')
@@ -129,12 +129,11 @@ def main(args):
             current_epoch = 0
 
     if args.test:
-        validate(val_loader, model, criterion, args)
+        test(model, args)
+        return
 
     train_loss = []
     val_loss = []
-    val_acc = []
-    mean_errors = []
     best = False
 
     print_options(args)
@@ -155,10 +154,9 @@ def main(args):
         train_loss = train_loss + loss_train
         if args.validate:
             # evaluate on validation set
-            loss_val, mean_error = validate(val_loader, model, criterion ,args)
+            loss_val =validate(val_loader, model, criterion ,args)
             val_loss = val_loss + loss_val
-            mean_errors += mean_error
-            #print(mean_errors)
+
         state = {
             'epoch': epoch,
             'arch': "REN",
@@ -183,10 +181,8 @@ def main(args):
     # save_plt(train_loss, "train_loss")
     np.savetxt(os.path.join(expr_dir, "val_loss.out"),val_loss, fmt='%f')
     # save_plt(val_loss, "val_loss")
-    np.savetxt(os.path.join(expr_dir, "val_acc.out"),val_acc, fmt='%f')
-    # save_plt(val_acc, "val_acc")
-    np.savetxt(os.path.join(expr_dir, "mean_errors.out"),mean_errors, fmt='%f')
-    # save_plt(mean_errors, "mean_errors")
+
+
 
 
 
@@ -235,9 +231,9 @@ def validate(val_loader, model, criterion, args):
     model.eval()
 
     loss_val = []
-    errors = []
     with torch.no_grad():
         expr_dir = os.path.join(args.save_dir, args.name)
+
         for i, (input, target) in enumerate(val_loader):
             target = target.float()
             target = target.cuda(non_blocking=False)
@@ -245,8 +241,6 @@ def validate(val_loader, model, criterion, args):
             input = input.float()
             input = input.cuda()
             output = model(input)
-
-            errors.append(compute_distance_error(output, target).item())
             loss = criterion(output, target)
 
             if i % args.print_interval == 0:
@@ -257,7 +251,47 @@ def validate(val_loader, model, criterion, args):
             np.savetxt(os.path.join(expr_dir, "_iteration_val_loss.out"), np.asarray(loss_val), fmt='%f')
 
 
-    return [np.mean(loss_val)] , [np.mean(errors)]
+    return [np.mean(loss_val)]
+
+def test(model, args):
+
+    # switch to evaluate mode
+    model.eval()
+    test_dataset = MSRADataset(training = False, augment= False, args = args)
+    errors = []
+    with torch.no_grad():
+        expr_dir = os.path.join(args.save_dir, args.name)
+
+        input_size= args.input_size
+        for i, (input, target) in enumerate(test_dataset):
+            target = target.float()
+            target = target.numpy().reshape(21,2)
+            tmp = np.zeros((21,3))
+            for j in range(len(target)):
+                tmp[j,:2] = target[j]
+            # compute output
+            input = input.float()
+            input = input.cuda()
+            input = input.unsqueeze(0)
+            output = model(input)
+            output = output.cpu().numpy().reshape(21,2)
+            tmp1 = np.zeros((21,3))
+            for j in range(len(output)):
+                tmp1[j,:2] = output[j]
+            center = test_dataset.get_center(i)
+            errors.append(compute_distance_error(_unnormalize_joints(tmp1,center,input_size), _unnormalize_joints(tmp,center,input_size)).item())
+
+            if i % args.print_interval == 0:
+                print('Test: [{0}/{1}]\t'
+                      'Loss {loss:.4f}\t'.format(
+                       i, len(test_dataset), loss=errors[-1]))
+
+        errors = np.mean(errors)
+        print(errors)
+        if "model_best" in args.checkpoint:
+            np.savetxt(os.path.join(expr_dir, "average_MAE_model_best_"+args.poses[0]), np.asarray([errors]), fmt='%f')
+        else:
+            np.savetxt(os.path.join(expr_dir, "average_MAE_checkpoint"+args.poses[0]), np.asarray([errors]), fmt='%f')
 
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
@@ -280,7 +314,7 @@ def load_checkpoint(path, model, optimizer):
 
 def compute_distance_error(output, target):
 
-    error = (torch.mean((target-output).abs()))
+    error = (np.mean(np.abs(target-output)))
     return error
 
 def draw_pose(img, pose):
@@ -295,7 +329,7 @@ def draw_pose(img, pose):
 
     return img
 
-def test(index, person):
+def test_scratch(index, person):
     import os
     np.set_printoptions(threshold=np.nan)
     np.set_printoptions(suppress=True)
@@ -306,18 +340,17 @@ def test(index, person):
         args.name = now.strftime("%Y-%m-%d-%H-%M")
     args.augment = not args.no_augment
     args.validate = not args.no_validate
-    train_dataset = MSRADataset(training = True, augment = True, args = args)
-    for i in range(0, 100):
-        print(i)
-        depth, joint, center = train_dataset.__getitem__(62)
-        dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
-        # cv2.imwrite(str(i)+'.jpg', dst)
-        cv2.imshow('truth', dst)
-        ch = cv2.waitKey(0)
-        if ch == ord('q'):
-            exit(0)
-
-    return
+    train_dataset = MSRADataset(training = True, augment = False, args = args)
+    for i in range(0, 1):
+        depth, joint, center = train_dataset.__getitem__(i)
+    #     dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
+    #     # cv2.imwrite(str(i)+'.jpg', dst)
+    #     cv2.imshow('truth', dst)
+    #     ch = cv2.waitKey(0)
+    #     if ch == ord('q'):
+    #         exit(0)
+    #
+    # return
     # print(depth.numpy())
     # print(joint.numpy().reshape(21,3))
     torch.no_grad()
@@ -334,6 +367,7 @@ def test(index, person):
     stime = time.time()
     depth = depth.unsqueeze(0)
     results = model(depth)
+    print(results)
     # print('truth', joint)
     # print("results", results)
     etime = time.time()
@@ -353,6 +387,7 @@ def test(index, person):
         tmp1[i,:2] = joint[i]
 
     results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
+    print(results)
     joint  = _unnormalize_joints(tmp1,center, input_size=args.input_size)
     # print(type(results))
     # print(type(joint))
@@ -387,14 +422,14 @@ def save_plt(array, name):
 
 if __name__ == '__main__':
     # try:
-    #     args = parser.parse_args()
-    #     main(args)
+    args = parser.parse_args()
+    main(args)
     # except Exception as e:
-    #    with open('error.out', 'w') as f:
-    #        f.write(str(e))
+       # with open('error.out', 'w') as f:
+           # f.write(str(e))
 
 
 
 
 
-    test(2000,0)
+    # test(2000,0)
