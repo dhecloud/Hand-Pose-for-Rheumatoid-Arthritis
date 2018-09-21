@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-PATH_TO_LOSS_FILE ='experiments/final/'
+PATH_TO_LOSS_FILE ='experiments/exp_e_lr0.0005/'
 
 def save_plt(array, name):
     if 'train_loss' in name:

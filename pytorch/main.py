@@ -396,6 +396,7 @@ def test_scratch(index, person):
     # print(joint)
     depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
     depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+    print("hi", depth.shape)
     # test = np.ones((240,320))
     dst = draw_pose(depth, joint.reshape(21,3))
     res = draw_pose(depth1, results.reshape(21,3))
@@ -432,4 +433,4 @@ if __name__ == '__main__':
 
 
 
-    # test(2000,0)
+    # test_scratch(2000,0)

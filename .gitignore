@@ -9,6 +9,10 @@
 *.tar.pth
 *.ini
 *.zip
+average_MAE_model_best_5
+average_MAE_model_best_1
+average_MAE_checkpoint1
+average_MAE_checkpoint5
 
 ##PBS scripts
 train.o*

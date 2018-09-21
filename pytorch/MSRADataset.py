@@ -18,7 +18,7 @@ class MSRADataset(Dataset):
         subjs = [0,1,2,3,4,5,6,7,8]
         poses = args.poses
         train_persons = args.persons
-        test_persons = list(set(train_persons)^set(subjs))
+        test_persons = list(set(train_persons)^set(subjs))      #complement of the train set
 
         if self.training:
             self.all_joints, self.keys = read_joints(persons=train_persons,poses=poses)
@@ -104,8 +104,7 @@ def get_center(img, upper=1000, lower=10):
         centers[2] = 300.0
     return centers
 
-def _crop_image(img, center, input_size = 96, is_debug=False):
-    _fx, _fy, _ux, _uy = 241.42, 241.42, 160, 120
+def _crop_image(img, center, input_size = 96, is_debug=False, _fx= 241.42, _fy= 241.42, _ux= 160, _uy = 120):
     _cube_size = 150
     _input_size = input_size
     xstart = center[0] - _cube_size / center[2] * _fx
