@@ -52,7 +52,7 @@ class MSRADataset(Dataset):
             depth,joint = data_rotate_chance(depth,joint, p = self.p)
 
 
-        joint /= 150
+        # joint /= 150
         joint = joint.reshape(21,3)[:,:2]
         joint = joint.reshape(42)
         assert not np.any(np.isnan(depth))
@@ -149,12 +149,10 @@ def _normalize_joints(joints, center, input_size = 96, is_debug=False):
     joints = get_rotated_points(joints.reshape(21,3),trans)
     return joints
 
-def _unnormalize_joints(joints, center, input_size = 96):
-    _fx, _fy, _ux, _uy = 241.42, 241.42, 160, 120
+def _unnormalize_joints(joints, center, input_size = 96, _fx= 241.42, _fy= 241.42, _ux= 160, _uy = 120):
     _cube_size = 150
     _input_size = input_size
     joints = joints.reshape(21,3)
-    joints *= 150
     joints[:,2::3] += center[2]
     xstart = center[0] - _cube_size / center[2] * _fx
     xend = center[0] + _cube_size / center[2] * _fx

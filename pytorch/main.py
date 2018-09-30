@@ -22,7 +22,7 @@ OUTFILE = "results"
 
 parser = argparse.ArgumentParser(description='Region Ensemble Network')
 parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
-parser.add_argument('--epoch', type=int, default=100, help='number of epochs')
+parser.add_argument('--epoch', type=int, default=40, help='number of epochs')
 parser.add_argument('--test', action='store_true', help='only test without training')
 parser.add_argument('--lr', type=float, default=0.005, help='initial learning rate')
 parser.add_argument('--lr_decay', type=int, default=20, help='decay lr by 10 after _ epoches')
@@ -178,9 +178,9 @@ def main(args):
 
     expr_dir = os.path.join(args.save_dir, args.name)
     np.savetxt(os.path.join(expr_dir, "train_loss.out"),train_loss, fmt='%f')
-    # save_plt(train_loss, "train_loss")
+    save_plt(train_loss, "train_loss")
     np.savetxt(os.path.join(expr_dir, "val_loss.out"),val_loss, fmt='%f')
-    # save_plt(val_loss, "val_loss")
+    save_plt(val_loss, "val_loss")
 
 
 
@@ -259,6 +259,7 @@ def test(model, args):
     model.eval()
     test_dataset = MSRADataset(training = False, augment= False, args = args)
     errors = []
+    MAE_criterion = nn.L1Loss()
     with torch.no_grad():
         expr_dir = os.path.join(args.save_dir, args.name)
 
@@ -279,7 +280,12 @@ def test(model, args):
             for j in range(len(output)):
                 tmp1[j,:2] = output[j]
             center = test_dataset.get_center(i)
-            errors.append(compute_distance_error(_unnormalize_joints(tmp1,center,input_size), _unnormalize_joints(tmp,center,input_size)).item())
+            # errors.append(compute_distance_error(_unnormalize_joints(tmp1,center,input_size), _unnormalize_joints(tmp,center,input_size)).item())
+            output = torch.from_numpy(_unnormalize_joints(tmp1,center,input_size))
+            target = torch.from_numpy(_unnormalize_joints(tmp,center,input_size))
+            MAE_loss = MAE_criterion(output, target)
+
+            errors.append(MAE_loss.item())
 
             if i % args.print_interval == 0:
                 print('Test: [{0}/{1}]\t'
@@ -340,72 +346,74 @@ def test_scratch(index, person):
         args.name = now.strftime("%Y-%m-%d-%H-%M")
     args.augment = not args.no_augment
     args.validate = not args.no_validate
-    train_dataset = MSRADataset(training = True, augment = False, args = args)
-    for i in range(0, 1):
-        depth, joint, center = train_dataset.__getitem__(i)
-    #     dst = draw_pose(depth[0].numpy(), (joint*150).numpy().reshape(21,2))
-    #     # cv2.imwrite(str(i)+'.jpg', dst)
+    train_dataset = MSRADataset(training = True, augment = True, args = args)
+    for i in range(0, 10):
+        depth, joint, center = train_dataset.__getitem__(1)
+
+    #     test3 = np.ones((96,96))
+    #     dst = draw_pose(depth[0].numpy(), (joint).numpy().reshape(21,2))
+    #     cv2.imwrite(str(i)+'.jpg', dst)
     #     cv2.imshow('truth', dst)
     #     ch = cv2.waitKey(0)
     #     if ch == ord('q'):
     #         exit(0)
-    #
     # return
     # print(depth.numpy())
     # print(joint.numpy().reshape(21,3))
-    torch.no_grad()
-    model = REN(args)
-    optimizer = torch.optim.SGD(model.parameters(), 0.005,
-                                momentum=0.9,
-                                weight_decay=0.0005)
-    #
-    model, optimizer, _ = load_checkpoint("experiments/all_8ppl_na/checkpoint.pth.tar", model, optimizer)
-    model.eval()
-    name = 5
-    person = 0
-    file = "000000"
-    stime = time.time()
-    depth = depth.unsqueeze(0)
-    results = model(depth)
-    print(results)
-    # print('truth', joint)
-    # print("results", results)
-    etime = time.time()
-    print("Time taken: " + str(etime-stime))
-    criterion = Modified_SmoothL1Loss()
-    loss = criterion(results.float(), joint.unsqueeze(0).float())
-    print(loss)
-    results = (results[0].detach().numpy()).reshape(21,2)
-    tmp = np.zeros((21,3))
-    for i in range(len(results)):
-        tmp[i,:2] = results[i]
+    with torch.no_grad():
+        model = REN(args)
+        optimizer = torch.optim.SGD(model.parameters(), 0.005,
+                                    momentum=0.9,
+                                    weight_decay=0.0005)
+        #
+        model, optimizer, _ = load_checkpoint("experiments/exp_d_0.005/checkpoint.pth.tar", model, optimizer)
+        model.eval()
+        name = 5
+        person = 0
+        file = "000000"
+        stime = time.time()
+        depth = depth.unsqueeze(0)
+        results = model(depth)
+        print('truth', joint)
+        # print("results", results)
+        etime = time.time()
+        # print("Time taken: " + str(etime-stime))
+        criterion = Modified_SmoothL1Loss()
+        loss = criterion(results.float(), joint.unsqueeze(0).float())
+        # print(loss)
+        results = (results[0].detach().numpy()).reshape(21,2)
+        tmp = np.zeros((21,3))
+        for i in range(len(results)):
+            tmp[i,:2] = results[i]
 
-    joint = joint.reshape(21,2)
-    print(joint.shape)
-    tmp1 = np.zeros((21,3))
-    for i in range(len(joint)):
-        tmp1[i,:2] = joint[i]
+        joint = joint.reshape(21,2)
+        # print(joint.shape)
+        tmp1 = np.zeros((21,3))
+        for i in range(len(joint)):
+            tmp1[i,:2] = joint[i]
+        # results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
 
-    results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
-    print(results)
-    joint  = _unnormalize_joints(tmp1,center, input_size=args.input_size)
-    # print(type(results))
-    # print(type(joint))
-    print("Error: " + str(np.mean(np.abs(results - joint))))
-    # print(results)
-    # print(joint)
-    depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-    depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-    print("hi", depth.shape)
-    # test = np.ones((240,320))
-    dst = draw_pose(depth, joint.reshape(21,3))
-    res = draw_pose(depth1, results.reshape(21,3))
-    print(res.shape)
-    cv2.imshow('truth', dst)
-    cv2.imshow('results', res)
-    ch = cv2.waitKey(0)
-    if ch == ord('q'):
-        exit(0)
+        # joint  = _unnormalize_joints(tmp1,center, input_size=args.input_size)
+        print(results)
+        print(joint)
+        # print(type(results))
+        # print(type(joint))
+        # print("Error: " + str(np.mean(np.abs(results - joint))))
+        # print(results)
+        # print(joint)
+        depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+        depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
+        # print("hi", depth.shape)
+        test = np.ones((240,320))
+        test1 = np.ones((240,320))
+        dst = draw_pose(test1, joint.reshape(21,2))
+        res = draw_pose(test, results.reshape(21,2))
+        # print(res.shape)
+        cv2.imshow('truth', dst)
+        cv2.imshow('results', res)
+        ch = cv2.waitKey(0)
+        if ch == ord('q'):
+            exit(0)
 
 def get_rotated_points(joints, M):
     for i in range(len(joints)):
@@ -422,14 +430,16 @@ def save_plt(array, name):
     plt.savefig(name+'.png')
 
 if __name__ == '__main__':
-    # try:
     args = parser.parse_args()
     main(args)
-    # except Exception as e:
-       # with open('error.out', 'w') as f:
-           # f.write(str(e))
+    # np.set_printoptions(threshold=np.nan)
 
-
+    # depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
+    # cv2.imshow('truth', depth)
+    # ch = cv2.waitKey(0)
+    # if ch == ord('q'):
+    #     exit(0)
+    # print(depth)
 
 
 
