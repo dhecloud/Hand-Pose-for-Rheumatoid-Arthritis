@@ -271,23 +271,3 @@ def world2pixel(x):
     x[:, 0] = x[:, 0] * fx / x[:, 2] + ux
     x[:, 1] = x[:, 1] * fy / x[:, 2] + uy
     return x
-
-if __name__ == '__main__':
-    index = 2000
-    person = 0
-    joints, keys = read_joints()
-    index = index + person*17*500
-    joints = joints[index]
-    print(joints.shape)
-    person = keys[index][0]
-    name = keys[index][1]
-    file = '%06d' % int(keys[index][2])
-    depth_main = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-
-    center = get_center(depth_main)
-    depth = _crop_image(depth_main, center, is_debug=False)
-    print(type(joints))
-    print(_normalize_joints(joints.numpy(),center))
-    msra = MSRADataset(args='',training=True,augment = True)
-    for i in range(1000):
-        msra.__getitem__(i)[0].shape

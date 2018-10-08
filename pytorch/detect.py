@@ -20,7 +20,7 @@ else:
 parser = argparse.ArgumentParser(description='Main Applications')
 parser.add_argument('--input_size', type=int, default=130, help='decay lr by 10 after _ epoches')
 parser.add_argument('--num_joints', type=int, default=42, help='decay lr by 10 after _ epoches')
-parser.add_argument('--checkpoint', type=str, default='experiments/exp_g_all/checkpoint.pth.tar', help='path/to/checkpoint.pth.tar')
+parser.add_argument('--checkpoint', type=str, default='experiments/exp_h/checkpoint.pth.tar', help='path/to/checkpoint.pth.tar')
 
 class Display(object):
     def __init__(self, args):
@@ -60,7 +60,7 @@ class Display(object):
         target_surface.lock()
         f8=np.uint8(frame.clip(1,4000)/16.)
         frame8bit=np.dstack((f8,f8,f8))
-        print(frame8bit.shape)
+        # print(frame8bit.shape)
         address = self._kinect.surface_as_array(target_surface.get_buffer())
         ctypes.memmove(address, frame8bit.ctypes.data, frame8bit.size)
         del address
@@ -99,7 +99,7 @@ class Display(object):
                 canvas = np.ones((240,320))
                 drawn = draw_pose(canvas, results)
                 tt = time.time()-st
-                print('time taken:', tt)
+                # print('time taken:', tt)
                 cv2.imshow('joints', drawn)
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break

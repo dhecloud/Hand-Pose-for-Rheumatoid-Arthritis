@@ -7,7 +7,7 @@
 Pull requests are welcome.
 
 I did not replicate the error results as that was not the goal of my project.  
-Qualitative results are pretty good. I scaled down the rotating in the augmentation to [-45,45] instead of [-180,180] in the paper as 180 did not seem to work well.  
+Results during the demo are pretty good.
 
 I also added another option to change the input size. The network will splice the features according. It will give an assertion error if the input size results in the features dimension being odd number.
 
@@ -22,12 +22,12 @@ Right now the code only supports the MSRA Hand Gesture dataset. If I have time, 
 
 Put the MSRA dataset in data/
 
-   
+
     data/
     data/P0/..
     data/P1/1/000000.bin
     ... and several other similar folders...
-    
+
 
 ## Training
 
@@ -49,7 +49,7 @@ If you only want to train on certain poses/subjects,
 
 
 
-## Getting the training statistics 
+## Getting the training statistics
 
 The train loss and validation loss will be saved in an out file in `save_dir`
 

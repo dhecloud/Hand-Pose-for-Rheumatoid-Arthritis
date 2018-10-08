@@ -1,7 +1,6 @@
 from torch import nn
 import torch
 import numpy as np
-# from torchviz import make_dot, make_dot_from_trace
 
 class RegionEnsemble(nn.Module):
 
@@ -130,47 +129,3 @@ class REN(nn.Module):
 
         out = self.fc1(out)
         return out
-
-
-class Test_Network(nn.Module):
-
-    def __init__(self, args):
-        super(Test_Network, self).__init__()
-        feat = int(np.floor(((args.input_size - 1 -1)/2) +1))
-        #nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
-        self.conv0 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size = 3, padding=1)
-        self.relu0 = nn.ReLU()
-        self.conv1 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size = 3, padding=1)
-        self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.relu1 = nn.ReLU()
-        self.fc1 = nn.Linear(16*feat*feat, args.num_joints)
-
-    def forward(self, x):
-
-        out = self.conv0(x)
-        out = self.relu0(out)
-
-        out = self.conv1(out)
-        out = self.maxpool1(out)
-        out = self.relu1(out)
-        print(out.shape)
-        out = out.view(out.size(0),-1)
-
-        out = self.fc1(out)
-        return out
-
-#
-# test = torch.tensor(np.random.rand(1,1,150,150))
-# test = test.cuda()
-# test = test.float()
-# model = REN()
-# # print(model)
-# model = model.float()
-# model = model.cuda()
-# result = model(test)
-# print(result)
-#
-# dot = make_dot(model(test), params=dict(model.named_parameters()))
-# dot.format= 'png'
-#
-# dot.render('model.png')

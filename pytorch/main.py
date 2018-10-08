@@ -1,8 +1,8 @@
 import cv2
 import warnings
 warnings.simplefilter("ignore")
-from MSRADataset import MSRADataset, read_joints, read_depth_from_bin, get_center, _crop_image, _normalize_joints, data_rotate_chance, data_scale_chance, data_translate_chance, _unnormalize_joints
-from REN import REN, Test_Network
+from MSRADataset import MSRADataset, read_depth_from_bin, get_center, _unnormalize_joints
+from REN import REN
 import torch.optim
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
@@ -15,9 +15,7 @@ import time
 import argparse
 import datetime
 import os, sys
-# import matplotlib.pyplot as plt
-
-OUTFILE = "results"
+import matplotlib.pyplot as plt
 
 
 parser = argparse.ArgumentParser(description='Region Ensemble Network')
@@ -140,21 +138,14 @@ def main(args):
     expr_dir = os.path.join(args.save_dir, args.name)
 
     for epoch in range(current_epoch, args.epoch):
-        with open("sentinel.txt", "r") as f:
-            sentinel = eval(f.readline())
 
-        if sentinel:
-            pass
-        else:
-            break
         optimizer = adjust_learning_rate(optimizer, epoch, args)
-        np.savetxt(os.path.join(expr_dir,"current_epoch.out"),[epoch], fmt='%f')
         # train for one epoch
         loss_train = train(train_loader, model, criterion, optimizer, epoch, args)
         train_loss = train_loss + loss_train
         if args.validate:
             # evaluate on validation set
-            loss_val =validate(val_loader, model, criterion ,args)
+            loss_val = validate(val_loader, model, criterion ,args)
             val_loss = val_loss + loss_val
 
         state = {
@@ -212,7 +203,6 @@ def train(train_loader, model, criterion, optimizer, epoch,args):
         loss.backward()
         loss_train.append(loss.data.item())
         optimizer.step()
-        np.savetxt(os.path.join(expr_dir, "_iteration_train_loss.out"), np.asarray(loss_train), fmt='%f')
         # measure elapsed time
         if i % args.print_interval == 0:
             TT = time.time() -stime
@@ -248,7 +238,6 @@ def validate(val_loader, model, criterion, args):
                       'Loss {loss:.4f}\t'.format(
                        i, len(val_loader), loss=loss))
             loss_val.append(loss.data.item())
-            np.savetxt(os.path.join(expr_dir, "_iteration_val_loss.out"), np.asarray(loss_val), fmt='%f')
 
 
     return [np.mean(loss_val)]
@@ -335,94 +324,6 @@ def draw_pose(img, pose):
 
     return img
 
-def test_scratch(index, person):
-    import os
-    np.set_printoptions(threshold=np.nan)
-    np.set_printoptions(suppress=True)
-    args = parser.parse_args()
-    set_default_args(args)
-    if not args.name:
-        now = datetime.datetime.now()
-        args.name = now.strftime("%Y-%m-%d-%H-%M")
-    args.augment = not args.no_augment
-    args.validate = not args.no_validate
-    train_dataset = MSRADataset(training = True, augment = True, args = args)
-    for i in range(0, 10):
-        depth, joint, center = train_dataset.__getitem__(1)
-
-    #     test3 = np.ones((96,96))
-    #     dst = draw_pose(depth[0].numpy(), (joint).numpy().reshape(21,2))
-    #     cv2.imwrite(str(i)+'.jpg', dst)
-    #     cv2.imshow('truth', dst)
-    #     ch = cv2.waitKey(0)
-    #     if ch == ord('q'):
-    #         exit(0)
-    # return
-    # print(depth.numpy())
-    # print(joint.numpy().reshape(21,3))
-    with torch.no_grad():
-        model = REN(args)
-        optimizer = torch.optim.SGD(model.parameters(), 0.005,
-                                    momentum=0.9,
-                                    weight_decay=0.0005)
-        #
-        model, optimizer, _ = load_checkpoint("experiments/exp_d_0.005/checkpoint.pth.tar", model, optimizer)
-        model.eval()
-        name = 5
-        person = 0
-        file = "000000"
-        stime = time.time()
-        depth = depth.unsqueeze(0)
-        results = model(depth)
-        print('truth', joint)
-        # print("results", results)
-        etime = time.time()
-        # print("Time taken: " + str(etime-stime))
-        criterion = Modified_SmoothL1Loss()
-        loss = criterion(results.float(), joint.unsqueeze(0).float())
-        # print(loss)
-        results = (results[0].detach().numpy()).reshape(21,2)
-        tmp = np.zeros((21,3))
-        for i in range(len(results)):
-            tmp[i,:2] = results[i]
-
-        joint = joint.reshape(21,2)
-        # print(joint.shape)
-        tmp1 = np.zeros((21,3))
-        for i in range(len(joint)):
-            tmp1[i,:2] = joint[i]
-        # results  = _unnormalize_joints(tmp,center, input_size=args.input_size)
-
-        # joint  = _unnormalize_joints(tmp1,center, input_size=args.input_size)
-        print(results)
-        print(joint)
-        # print(type(results))
-        # print(type(joint))
-        # print("Error: " + str(np.mean(np.abs(results - joint))))
-        # print(results)
-        # print(joint)
-        depth = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-        depth1 = read_depth_from_bin("data/P"+str(person)+"/"+str(name)+"/"+str(file)+"_depth.bin")
-        # print("hi", depth.shape)
-        test = np.ones((240,320))
-        test1 = np.ones((240,320))
-        dst = draw_pose(test1, joint.reshape(21,2))
-        res = draw_pose(test, results.reshape(21,2))
-        # print(res.shape)
-        cv2.imshow('truth', dst)
-        cv2.imshow('results', res)
-        ch = cv2.waitKey(0)
-        if ch == ord('q'):
-            exit(0)
-
-def get_rotated_points(joints, M):
-    for i in range(len(joints)):
-        x = joints[i][0]
-        y = joints[i][1]
-        joints[i][0] = M[0,0]*x+ M[0,1]*y + M[0,2]
-        joints[i][1] = M[1,0]*x + M[1,1]*y + M[1,2]
-    return joints
-
 def save_plt(array, name):
     plt.plot(array)
     plt.xlabel('epoch')
@@ -432,15 +333,3 @@ def save_plt(array, name):
 if __name__ == '__main__':
     args = parser.parse_args()
     main(args)
-    # np.set_printoptions(threshold=np.nan)
-
-    # depth = read_depth_from_bin("data/P0/5/000000_depth.bin")
-    # cv2.imshow('truth', depth)
-    # ch = cv2.waitKey(0)
-    # if ch == ord('q'):
-    #     exit(0)
-    # print(depth)
-
-
-
-    # test_scratch(2000,0)
