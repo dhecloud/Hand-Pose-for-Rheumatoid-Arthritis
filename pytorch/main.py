@@ -19,25 +19,25 @@ import matplotlib.pyplot as plt
 
 
 parser = argparse.ArgumentParser(description='Region Ensemble Network')
-parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
-parser.add_argument('--epoch', type=int, default=40, help='number of epochs')
-parser.add_argument('--test', action='store_true', help='only test without training')
-parser.add_argument('--lr', type=float, default=0.005, help='initial learning rate')
-parser.add_argument('--lr_decay', type=int, default=20, help='decay lr by 10 after _ epoches')
-parser.add_argument('--input_size', type=int, default=96, help='decay lr by 10 after _ epoches')
-parser.add_argument('--num_joints', type=int, default=42, help='decay lr by 10 after _ epoches')
-parser.add_argument('--no_augment', action='store_true', help='dont augment data?')
-parser.add_argument('--no_validate', action='store_true', help='dont validate data when training?')
-parser.add_argument('--augment_probability', type=float, default=1.0, help='augment probability')
-parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
-parser.add_argument('--weight_decay', type=float, default=0.0005, help='weight_decay')
-parser.add_argument('--poses', type=str, default=None, nargs='+', help='poses to train on')
-parser.add_argument('--persons', type=str, default=None, nargs='+', help='persons to train on')
-parser.add_argument('--checkpoint', type=str, default=None, help='path/to/checkpoint.pth.tar')
-parser.add_argument('--print_interval', type=int, default=500, help='print interval')
-parser.add_argument('--save_dir', type=str, default="experiments/", help='path/to/save_dir')
+parser.add_argument('--batchSize', type=int, default=128, help='input batch size - default:128')
+parser.add_argument('--epoch', type=int, default=40, help='number of epochs - default:40')
+parser.add_argument('--test', action='store_true', help='only test for mean error rate - default:false')
+parser.add_argument('--lr', type=float, default=0.005, help='initial learning rate - default:0.005')
+parser.add_argument('--lr_decay', type=int, default=20, help='decay lr by 10 after _ epoches - default:20')
+parser.add_argument('--input_size', type=int, default=96, help='input size of the depth image - default:96')
+parser.add_argument('--num_joints', type=int, default=42, help='number of joints coordinates - default:2x21')
+parser.add_argument('--no_augment', action='store_true', help='dont augment data? - default:false')
+parser.add_argument('--no_validate', action='store_true', help='dont validate data when training? - default:false')
+parser.add_argument('--augment_probability', type=float, default=1.0, help='augment probability - default:1.0')
+parser.add_argument('--momentum', type=float, default=0.9, help='momentum - default:0.9')
+parser.add_argument('--weight_decay', type=float, default=0.0005, help='weight_decay - default:0.0005')
+parser.add_argument('--poses', type=str, default=None, nargs='+', help='poses to train on - default: all poses')
+parser.add_argument('--persons', type=str, default=None, nargs='+', help='persons to train on - default:0-7')
+parser.add_argument('--checkpoint', type=str, default=None, help='path/to/checkpoint.pth.tar - default:None')
+parser.add_argument('--print_interval', type=int, default=500, help='print interval - default:500')
+parser.add_argument('--save_dir', type=str, default="experiments/", help='path/to/save_dir - default:experiments/')
 parser.add_argument('--name', type=str, default=None, help='name of the experiment. It decides where to store samples and models. if none, it will be saved as the date and time')
-parser.add_argument('--finetune', action='store_true', help='use a pretrained checkpoint')
+parser.add_argument('--finetune', action='store_true', help='use a pretrained checkpoint - default:false')
 
 
 def print_options(opt):
@@ -169,15 +169,9 @@ def main(args):
 
     expr_dir = os.path.join(args.save_dir, args.name)
     np.savetxt(os.path.join(expr_dir, "train_loss.out"),train_loss, fmt='%f')
-    save_plt(train_loss, "train_loss")
+    save_plt(train_loss, os.path.join(expr_dir, "train_loss"))
     np.savetxt(os.path.join(expr_dir, "val_loss.out"),val_loss, fmt='%f')
-    save_plt(val_loss, "val_loss")
-
-
-
-
-
-
+    save_plt(val_loss, os.path.join(expr_dir, "val_loss"))
 
 def train(train_loader, model, criterion, optimizer, epoch,args):
 
@@ -269,7 +263,6 @@ def test(model, args):
             for j in range(len(output)):
                 tmp1[j,:2] = output[j]
             center = test_dataset.get_center(i)
-            # errors.append(compute_distance_error(_unnormalize_joints(tmp1,center,input_size), _unnormalize_joints(tmp,center,input_size)).item())
             output = torch.from_numpy(_unnormalize_joints(tmp1,center,input_size))
             target = torch.from_numpy(_unnormalize_joints(tmp,center,input_size))
             MAE_loss = MAE_criterion(output, target)
@@ -307,28 +300,23 @@ def load_checkpoint(path, model, optimizer):
 
     return model, optimizer, epoch
 
-def compute_distance_error(output, target):
-
-    error = (np.mean(np.abs(target-output)))
-    return error
+def save_plt(array, name):
+    plt.plot(array)
+    plt.xlabel('epoch')
+    plt.ylabel('name')
+    plt.legend()
+    plt.savefig(name+'.png')
 
 def draw_pose(img, pose):
     for pt in pose:
         cv2.circle(img, (int(pt[0]), int(pt[1])), 3, (0, 0, 255), -1)
 
     for x, y in [(0, 1), (1, 2), (2, 3), (3, 4), (0, 5), (5, 6), (6, 7), (7, 8),
-                (0, 9), (9, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15), (15, 16),
-                (0, 17), (17, 18), (18, 19), (19, 20)]:
+                 (0, 9), (9, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15), (15, 16),
+                 (0, 17), (17, 18), (18, 19), (19, 20)]:
         cv2.line(img, (int(pose[x, 0]), int(pose[x, 1])),
-                 (int(pose[y, 0]), int(pose[y, 1])), (0, 0, 255), 1)
-
+                  (int(pose[y, 0]), int(pose[y, 1])), (0, 0, 255), 1)
     return img
-
-def save_plt(array, name):
-    plt.plot(array)
-    plt.xlabel('epoch')
-    plt.ylabel('name')
-    plt.savefig(name+'.png')
 
 if __name__ == '__main__':
     args = parser.parse_args()
